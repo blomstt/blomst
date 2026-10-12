@@ -1,0 +1,42 @@
+.music-widget {
+  min-width: 240px;
+  padding: 10px;
+  border-radius: 12px;
+  background-color: $background;
+  color: $foreground;
+}
+
+.musicbar-widget trough {
+  all: unset;
+  background-color: mix($background, $foreground, 80%);
+  border-radius: 5px;
+  min-height: 6px;
+  min-width: 50px;
+  margin: 0 4px;
+}
+
+.musicbar-widget trough highlight {
+  min-height: 4px;
+  background-color: mix($color6, $foreground, 90%);
+  border-radius: 5px;
+}
+
+.song-cover-art-widget {
+  background-size: cover;
+  background-position: center;
+  background-color: mix($background, $foreground, 70%);
+  min-height: 70px;
+  min-width: 70px;
+  margin: 4px;
+  border-radius: 6px;
+}
+
+.parentbox-widget {
+  padding: 0 6px;
+  min-width: 125px;
+}
+
+.artist-widget {
+  font-size: 0.8rem;
+  color: $color2;
+}

@@ -1,0 +1,6 @@
+;; Written by Blomst Settings. Which pieces of the side-bar are shown.
+(defvar show-cpu true)
+(defvar show-temp true)
+(defvar show-mem true)
+(defvar show-disk true)
+(defvar show-music true)
