@@ -15,6 +15,7 @@ window.
 | Super + S | Settings window (Ctrl + F searches every setting and keybind) |
 | Super + H | Widget popups and notification center |
 | Super + Shift + W | Wallpaper picker |
+| Ctrl + Shift + Esc | Task manager: end apps and processes, like on Windows |
 | Super + 1 to 5 | Workspace 1 to 5 on the screen the mouse is on |
 | Super + Shift + 1 to 5 | Send the focused window to that workspace |
 | Super + 6 to 0 | Second screen's workspaces 1 to 5, from anywhere |

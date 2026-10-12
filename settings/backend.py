@@ -34,6 +34,10 @@ NIGHT_LIGHT = os.path.join(CONFIG, "blomst-settings/night-light.json")       # r
 NIGHT_LIGHT_SCRIPT = os.path.join(HOME, "scripts/night_light.sh")
 IDLE_TOGGLE = os.path.join(CONFIG, "eww/scripts/toggle-idle.sh")
 XKB_RULES = "/usr/share/X11/xkb/rules/base.lst"
+EWW_SCSS = os.path.join(CONFIG, "eww/eww.scss")
+ROFI_CONFIGS = [os.path.join(CONFIG, "rofi", n) for n in ("config.rasi", "config-wallpaper.rasi", "config-password.rasi")]
+HYPRLOCK = os.path.join(CONFIG, "hypr/service/hyprlock.conf")
+FONT_KEYS = ("font_desktop", "font_terminal", "font_terminal_size")
 FLOAT_OPTIONS = os.path.join(CONFIG, "blomst-settings/float-options.json")   # read by ~/scripts/float_sizes.py
 FLOAT_KEYS = {"float_size": "size", "float_position": "position"}
 NOTIF_OPTIONS = os.path.join(CONFIG, "blomst-settings/notifications.json")   # read by the eww notification handler
@@ -106,6 +110,7 @@ DEFAULTS = {
     "repeat_rate": 25, "repeat_delay": 600, "mouse_sensitivity": 0.0, "accel_profile": "adaptive",
     "follow_mouse": 1, "natural_scroll": False, "touchpad_natural_scroll": False,
     "idle_enabled": True, "night_light": False, "night_light_temp": 4500,
+    "font_desktop": "Iosevka", "font_terminal": "Iosevka", "font_terminal_size": 11,
     "float_size": True, "float_position": True,
     "notif_popups": True, "notif_popup_seconds": 10, "notif_history_limit": 50,
     "notif_in_stack": True, "notif_hide_with_stack": True,
@@ -251,6 +256,14 @@ def read_settings():
     options = hypr_get(cache.get(INPUTS, ""), ["input"], "kb_options") or ""
     found = re.search(r"grp:\w+", options)
     out["layout_switch"] = next((k for k, v in LAYOUT_SWITCHES.items() if found and v == found.group(0)), "none")
+
+    m = re.search(r'font-family:\s*"([^"]+)"', _read(EWW_SCSS))
+    out["font_desktop"] = m.group(1) if m else DEFAULTS["font_desktop"]
+    kitty = _read(KITTY)
+    m = re.search(r"^\s*font_family\s+(.+?)\s*$", kitty, re.M)
+    out["font_terminal"] = m.group(1) if m else DEFAULTS["font_terminal"]
+    m = re.search(r"^\s*font_size\s+([\d.]+)", kitty, re.M)
+    out["font_terminal_size"] = float(m.group(1)) if m else DEFAULTS["font_terminal_size"]
 
     out["idle_enabled"] = _running("hypridle")
     night = _read_json(NIGHT_LIGHT, {})
@@ -436,6 +449,8 @@ def write_setting(key, value):
         if bool(value) == _running("hypridle"):
             return False
         return _detach(["bash", IDLE_TOGGLE])
+    elif key in FONT_KEYS:
+        return write_font(key, value)
     elif key in ("night_light", "night_light_temp"):
         data = _read_json(NIGHT_LIGHT, {})
         data.setdefault("enabled", DEFAULTS["night_light"])
@@ -510,6 +525,82 @@ def valid_kb_layout(value):
     if not codes:                     # cannot check on this machine; trust it
         return all(re.fullmatch(r"[a-z]{2,3}", v) for v in wanted)
     return all(v in codes for v in wanted)
+
+
+# ---------- fonts ----------
+
+_SKIP_FONTS = ("Font Awesome", "Nerd Font Mono", "Nerd Font Propo", "Emoji", "Symbols", "Noto Color", "Noto Sans Mono CJK",
+               "Noto Serif CJK", "Noto Sans CJK", "v4 Compatibility")
+
+
+def installed_fonts():
+    """Font families you can pick, as {family, mono}. One entry per family."""
+    try:
+        out = subprocess.run(["fc-list", ":style=Regular:lang=en", "family", "spacing"], capture_output=True, text=True, timeout=5).stdout
+    except (OSError, subprocess.SubprocessError):
+        return []
+    fonts = {}
+    for line in out.splitlines():
+        names, _, spacing = line.partition(":spacing=")
+        family = names.split(",")[0].strip().replace("\\-", "-")
+        if not family or any(skip in family for skip in _SKIP_FONTS):
+            continue
+        mono = spacing.strip() in ("90", "100")
+        fonts[family] = fonts.get(family, False) or mono
+    return [{"family": f, "mono": m} for f, m in sorted(fonts.items(), key=lambda kv: kv[0].lower())]
+
+
+def _known_font(family):
+    return any(f["family"] == family for f in installed_fonts())
+
+
+def write_font(key, value):
+    """Change the desktop font (bar, widgets, menus, lock screen) or the terminal font."""
+    quiet = dict(stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    if key == "font_terminal_size":
+        size = min(32, max(6, round(float(value) * 2) / 2))
+        text = _read(KITTY)
+        line = "font_size %s" % _format(size, float)
+        if re.search(r"^\s*font_size\s", text, re.M):
+            new = re.sub(r"^(\s*)font_size\s+.*$", lambda m: m.group(1) + line, text, flags=re.M)
+        else:
+            new = re.sub(r"^(\s*font_family\s.*)$", lambda m: m.group(1) + "\n" + line, text, count=1, flags=re.M)
+        if new == text:
+            return False
+        _write(KITTY, new)
+        _detach(["pkill", "-USR1", "-x", "kitty"])      # kitty re-reads its config
+        return True
+
+    family = str(value).strip()
+    if not family or '"' in family or "\n" in family or not _known_font(family):
+        return False
+    if key == "font_terminal":
+        text = _read(KITTY)
+        new = re.sub(r"^(\s*)font_family\s+.*$", lambda m: m.group(1) + "font_family " + family, text, flags=re.M)
+        if new == text:
+            return False
+        _write(KITTY, new)
+        _detach(["pkill", "-USR1", "-x", "kitty"])
+        return True
+
+    changed = False
+    text = _read(EWW_SCSS)
+    new = re.sub(r'font-family:\s*"[^"]+"', 'font-family: "%s"' % family, text, count=1)
+    if new != text:
+        _write(EWW_SCSS, new)                   # eww reloads by itself when its files change
+        changed = True
+    for path in ROFI_CONFIGS:
+        text = _read(path)
+        new = re.sub(r'(^\s*font:\s*")[^"]*?(\s+\d+)?(";)', lambda m: m.group(1) + family + (m.group(2) or " 14") + m.group(3), text, count=1, flags=re.M)
+        if new != text:
+            _write(path, new)
+            changed = True
+    text = _read(HYPRLOCK)
+    new = re.sub(r"^(\s*font_family\s*=\s*).*$", lambda m: m.group(1) + family, text, flags=re.M)
+    if new != text:
+        _write(HYPRLOCK, new)
+        changed = True
+    return changed
 
 
 # ---------- night light ----------
@@ -632,7 +723,7 @@ def write_monitor_lines(lines):
 # ---------- keybinds ----------
 
 MOD_NAMES = {"SUPER": "Super", "SHIFT": "Shift", "CTRL": "Ctrl", "CONTROL": "Ctrl", "ALT": "Alt"}
-KEY_NAMES = {"RETURN": "Enter", "SPACE": "Space", "PRINT": "Print", "mouse_down": "Scroll down",
+KEY_NAMES = {"RETURN": "Enter", "SPACE": "Space", "PRINT": "Print", "Escape": "Esc", "ESCAPE": "Esc", "mouse_down": "Scroll down",
              "mouse_up": "Scroll up", "mouse:272": "Left drag", "mouse:273": "Right drag",
              "XF86AudioRaiseVolume": "Volume up", "XF86AudioLowerVolume": "Volume down",
              "XF86AudioMute": "Mute", "XF86AudioMicMute": "Mute microphone",

@@ -9,7 +9,7 @@
 
 configuration {
     modi:                       "drun,run";
-    font:                       "Mononoki 14";
+    font:                       "Iosevka 14";
     show-icons:                 true;
     hover-select:               false;
     scroll-method:              1;

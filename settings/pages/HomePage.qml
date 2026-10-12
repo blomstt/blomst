@@ -61,19 +61,24 @@ PageScroll {
             model: [
                 { keys: "Ctrl + F", what: "Search every setting and keybind" },
                 { keys: "Ctrl + Z", what: "Undo the last change" },
-                { keys: "Esc", what: "Clear the search, or close the window" }
+                { keys: "Esc", what: "Clear the search, or close the window" },
+                { keys: "Ctrl + Shift + Esc", what: "Task manager (works anywhere)" }
             ]
             Row {
                 required property var modelData
                 spacing: 16
                 Rectangle {
-                    width: 90; height: 26; radius: 6
+                    width: 140; height: 26; radius: 6
                     color: backend.palette.surface3
                     Text { anchors.centerIn: parent; text: parent.parent.modelData.keys; color: backend.palette.text; font.pixelSize: 12 }
                 }
                 Text { anchors.verticalCenter: parent.verticalCenter; text: modelData.what; color: backend.palette.subtext; font.pixelSize: 13 }
             }
         }
-        PillButton { label: "Open the config folder"; icon: ""; onClicked: backend.openConfigFolder() }
+        Row {
+            spacing: 6
+            PillButton { label: "Task manager"; icon: "\uf0ae"; primary: true; onClicked: backend.openTaskManager() }
+            PillButton { label: "Open the config folder"; icon: ""; onClicked: backend.openConfigFolder() }
+        }
     }
 }

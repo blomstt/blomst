@@ -21,6 +21,7 @@ QtObject {
         { key: "wallpapers", label: "Wallpapers", icon: "", group: "Look" },
         { key: "presets", label: "Presets", icon: "", group: "Look" },
         { key: "appearance", label: "Appearance", icon: "", group: "Look" },
+        { key: "fonts", label: "Fonts", icon: "\uf031", group: "Look" },
         { key: "animations", label: "Animations", icon: "", group: "Look" },
         { key: "bar", label: "Bar", icon: "", group: "Desktop" },
         { key: "notifications", label: "Notifications", icon: "", group: "Desktop" },

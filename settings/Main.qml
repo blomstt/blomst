@@ -139,6 +139,7 @@ Window {
             WallpapersPage {}
             PresetsPage {}
             AppearancePage {}
+            FontsPage {}
             AnimationsPage {}
             BarPage {}
             NotificationsPage {}
