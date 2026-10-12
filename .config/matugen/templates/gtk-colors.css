@@ -31,3 +31,80 @@
 @define-color insensitive_bg_color {{base16.base01.default.hex}};
 @define-color insensitive_fg_color {{base16.base03.default.hex}};
 @define-color borders {{base16.base02.default.hex}};
+
+/* ---- Widget rules ----
+   The colour names above are only picked up by apps built on libadwaita or the adw-gtk3
+   theme. Plain GTK apps (pavucontrol, file pickers) ignore them, so paint the common
+   widgets directly. */
+window, dialog, .background, popover > contents, popover > arrow, menu {
+  background-color: @window_bg_color;
+  color: @window_fg_color;
+}
+headerbar, .titlebar, actionbar, toolbar {
+  background-color: @headerbar_bg_color;
+  background-image: none;
+  color: @headerbar_fg_color;
+  border-color: @borders;
+  box-shadow: none;
+}
+label { color: inherit; }
+label:disabled, .dim-label { color: @insensitive_fg_color; }
+
+scrolledwindow, viewport, frame, list, listview, row, treeview.view, textview, textview text,
+notebook, notebook > header, notebook > stack, stack {
+  background-color: @view_bg_color;
+  color: @view_fg_color;
+  border-color: @borders;
+}
+notebook > header tab { color: @insensitive_fg_color; background-color: transparent; }
+notebook > header tab:checked { color: @window_fg_color; box-shadow: inset 0 -3px @accent_color; }
+separator { background-color: @borders; }
+
+button, entry, spinbutton, combobox, dropdown > button, menubutton > button {
+  background-color: @card_bg_color;
+  background-image: none;
+  color: @window_fg_color;
+  border-color: @borders;
+  box-shadow: none;
+  text-shadow: none;
+}
+button:hover { background-color: shade(@card_bg_color, 1.35); }
+button:checked, button:active, button.suggested-action {
+  background-color: @accent_bg_color;
+  color: @accent_fg_color;
+}
+button.destructive-action { background-color: @destructive_bg_color; color: @destructive_fg_color; }
+entry:focus-within, entry:focus { border-color: @accent_color; }
+
+scale trough, progressbar trough, levelbar trough { background-color: @card_bg_color; border-color: @borders; }
+scale highlight, progressbar progress, levelbar block.filled, levelbar block.low, levelbar block.high, levelbar block.full {
+  background-color: @accent_bg_color;
+  border-color: @accent_bg_color;
+}
+levelbar block.empty { background-color: @card_bg_color; border-color: @borders; }
+/* A plain round knob, replacing the theme's pointer-shaped one */
+scale slider, scale.marks-before slider, scale.marks-after slider {
+  -gtk-icon-source: none;
+  background-image: none;
+  background-color: @window_fg_color;
+  border: none;
+  border-radius: 999px;
+  box-shadow: none;
+  min-width: 14px;
+  min-height: 14px;
+  margin: -6px;
+}
+scale slider:hover { background-color: @accent_color; }
+
+switch { background-color: @card_bg_color; border-color: @borders; }
+switch:checked { background-color: @accent_bg_color; }
+switch slider { background-color: @window_fg_color; }
+checkbutton check, checkbutton radio, check, radio {
+  background-color: @card_bg_color;
+  border-color: @borders;
+  color: @window_fg_color;
+}
+check:checked, radio:checked { background-color: @accent_bg_color; color: @accent_fg_color; }
+
+selection, row:selected, *:selected { background-color: @accent_bg_color; color: @accent_fg_color; }
+tooltip, tooltip.background { background-color: @popover_bg_color; color: @popover_fg_color; }
