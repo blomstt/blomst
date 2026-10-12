@@ -40,6 +40,15 @@ window, dialog, .background, popover > contents, popover > arrow, menu {
   background-color: @window_bg_color;
   color: @window_fg_color;
 }
+
+/* eww draws the bar and widgets as GTK windows; keep them see-through so their rounded corners show.
+   One class per eww window name (eww adds it): add new eww windows here. */
+window.bar, window.side-bar, window.wallpaper, window.device-control, window.resource-monitor,
+window.music-window, window.custom-calendar, window.calendar, window.notifications,
+window.notification-center {
+  background-color: transparent;
+}
+
 headerbar, .titlebar, actionbar, toolbar {
   background-color: @headerbar_bg_color;
   background-image: none;

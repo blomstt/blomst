@@ -515,6 +515,8 @@ def main():
     QIcon.setThemeName(ICON_THEME)
 
     backend = Backend()
+    if "--page" in sys.argv[:-1]:                    # open on a given page, e.g. --page fonts
+        backend._state["page"] = sys.argv[sys.argv.index("--page") + 1]
     engine = QQmlApplicationEngine()
     engine.rootContext().setContextProperty("backend", backend)
     engine.addImageProvider("icon", IconProvider())

@@ -52,11 +52,42 @@ def esc(text):
 def shorten(text, limit):
     return text if len(text) <= limit else text[:limit - 1].rstrip() + "…"
 
+ICON_DIRS = [os.path.expanduser("~/.local/share/icons"), os.path.expanduser("~/.icons"),
+             "/usr/share/icons/Papirus-Dark", "/usr/share/icons/Papirus", "/usr/share/icons/hicolor",
+             "/usr/share/icons/Adwaita"]
+ICON_SIZES = ("scalable", "64x64", "48x48", "128x128", "256x256", "32x32", "512x512")
+_icon_cache = {}
+
+def find_icon(name):
+    """The file for an icon name, so every icon is drawn at the same size."""
+    if name in _icon_cache:
+        return _icon_cache[name]
+    found = ""
+    for base in ICON_DIRS:
+        for size in ICON_SIZES:
+            for sub in ("apps", "48", ""):
+                for ext in (".svg", ".png"):
+                    path = os.path.join(base, size, sub, name + ext) if sub else os.path.join(base, size, name + ext)
+                    if os.path.isfile(path):
+                        found = path
+                        break
+                if found: break
+            if found: break
+        if found: break
+    if not found:
+        for ext in (".svg", ".png"):
+            if os.path.isfile("/usr/share/pixmaps/" + name + ext):
+                found = "/usr/share/pixmaps/" + name + ext
+                break
+    _icon_cache[name] = found
+    return found
+
 def icon_widget(icon, size):
-    if icon and os.path.isfile(os.path.expanduser(icon)):
-        return f'(image :class "notif-icon" :image-width {size} :image-height {size} :path "{esc(os.path.expanduser(icon))}")'
-    if icon:
-        return f'(image :class "notif-icon" :icon "{esc(icon)}" :icon-size "{"dnd" if size >= 32 else "large-toolbar"}")'
+    path = os.path.expanduser(icon) if icon else ""
+    if path and not os.path.isfile(path):
+        path = find_icon(icon)
+    if path:
+        return f'(image :class "notif-icon" :image-width {size} :image-height {size} :path "{esc(path)}")'
     return '(label :class "notif-icon notif-icon-fallback" :text "")'
 
 def popup_widget(n):

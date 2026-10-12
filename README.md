@@ -8,6 +8,21 @@ follows the wallpaper across the terminal, Hyprland, the lock screen, btop, yazi
 and Code - OSS, per-monitor workspaces, live resource rings in the side-bar, and a settings
 window.
 
+## Screenshots
+
+![The desktop with the Super + H widgets and the notification center open](docs/screenshots/desktop.jpg)
+
+| | |
+| --- | --- |
+| ![Settings window, Home page](docs/screenshots/settings-home.png) | ![Task manager](docs/screenshots/task-manager.png) |
+| **Settings** (Super + S): quick switches, search with Ctrl + F, undo with Ctrl + Z | **Task manager** (Ctrl + Shift + Esc): what is running, in plain words, and what is safe to end |
+| ![Fonts page](docs/screenshots/settings-fonts.png) | ![Displays page](docs/screenshots/settings-displays.png) |
+| **Fonts**: one font for the bar, menus and lock screen, another for the terminal | **Displays**: resolution, refresh rate and scale, tried for 15 seconds before they stick |
+| ![Keybinds page](docs/screenshots/settings-keybinds.png) | ![App launcher](docs/screenshots/launcher.png) |
+| **Keybinds**: every shortcut, named by its comment in `keybinds.conf` | **App launcher** (Super + Space) with an icon for every app |
+| ![Notification pop-ups](docs/screenshots/notifications.png) | |
+| **Notifications** in the wallpaper colours; past ones are kept in the notification center | |
+
 ## Keys
 
 | Keys | What it does |
