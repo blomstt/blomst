@@ -369,6 +369,7 @@ Window {
                 NavItem { label: "Animations"; key: "animations"; current: root.page; onPicked: root.page = key }
                 NavItem { label: "Bar"; key: "bar"; current: root.page; onPicked: root.page = key }
                 NavItem { label: "Idle"; key: "idle"; current: root.page; onPicked: root.page = key }
+                NavItem { label: "Notifications"; key: "notifications"; current: root.page; onPicked: root.page = key }
                 NavItem { label: "Apps"; key: "apps"; current: root.page; onPicked: { backend.refreshOpenApps(); root.page = key } }
             }
         }
@@ -602,6 +603,18 @@ Window {
                     SettingSlider { key: "inactive_opacity"; from: 0.5; to: 1; step: 0.01; decimals: 2 }
                 }
 
+                SectionTitle { text: "Floating windows" }
+                SettingRow {
+                    title: "Remember size"
+                    hint: "Floating windows reopen at the size you last gave them"
+                    SettingSwitch { key: "float_size" }
+                }
+                SettingRow {
+                    title: "Remember position"
+                    hint: "Floating windows reopen where you last put them"
+                    SettingSwitch { key: "float_position" }
+                }
+
                 SectionTitle { text: "Blur and shadow" }
                 SettingRow {
                     title: "Blur"
@@ -718,6 +731,57 @@ Window {
                     title: "Suspend the PC after"
                     hint: "Minutes"
                     SettingSlider { key: "idle_suspend_min"; from: 5; to: 240; step: 5 }
+                }
+            }
+
+            // ----- Notifications -----
+            PageScroll {
+                id: notificationsPage
+                visible: root.page === "notifications"
+
+                SectionTitle { text: "Pop-ups" }
+                SettingRow {
+                    title: "Show pop-ups"
+                    hint: "Off is do not disturb: notifications still land in the notification center"
+                    SettingSwitch { key: "notif_popups" }
+                }
+                SettingRow {
+                    title: "Pop-ups stay for"
+                    hint: "Seconds"
+                    SettingSlider { key: "notif_popup_seconds"; from: 3; to: 30 }
+                }
+
+                SectionTitle { text: "Notification center" }
+                Text {
+                    width: parent.width
+                    wrapMode: Text.WordWrap
+                    text: "The list under the calendar in the Super + H widgets."
+                    color: backend.palette.subtext
+                    font.pixelSize: 13
+                }
+                SettingRow {
+                    title: "Show with Super + H"
+                    SettingSwitch { key: "notif_in_stack" }
+                }
+                SettingRow {
+                    title: "Hide pop-ups while it's open"
+                    hint: "They would cover the widgets otherwise"
+                    SettingSwitch { key: "notif_hide_with_stack" }
+                }
+                SettingRow {
+                    title: "Keep the last"
+                    hint: "Notifications in the history"
+                    SettingSlider { key: "notif_history_limit"; from: 10; to: 200; step: 10 }
+                }
+                SettingRow {
+                    title: "Clear history"
+                    hint: "Removes everything from the notification center"
+                    PillButton {
+                        anchors.right: parent.right
+                        anchors.verticalCenter: parent.verticalCenter
+                        label: "Clear"
+                        onClicked: backend.clearNotifications()
+                    }
                 }
             }
 

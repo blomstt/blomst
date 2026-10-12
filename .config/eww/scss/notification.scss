@@ -1,19 +1,91 @@
 .notifications {
-    min-height: 0px;
-    background-color: transparent;
+  background-color: transparent;
 }
 
 .notif {
-    background-color: mix($color1, $background, 20%);
-    margin-bottom: 10px;
-    padding: 12px;
-    border-radius: 12px;
+  min-width: 300px;
+  background-color: $background;
+  color: $foreground;
+  border: 1px solid mix($background, $color1, 60%);
+  margin-bottom: 10px;
+  padding: 12px;
+  border-radius: 12px;
 }
 
-.notif image {
-    padding-right: 10px;
+.notif-icon {
+  min-width: 32px;
+  min-height: 32px;
 }
 
-.notif-summary{  
-  color: $color2;
+.notif-summary {
+  color: $color7;
+  font-size: 0.95rem;
+}
+
+.notif-body {
+  color: $foreground;
+  font-size: 0.85rem;
+  font-weight: normal;
+  margin-top: 2px;
+}
+
+.notif-icon-fallback {
+  font-family: "Font Awesome 6 Free";
+  font-size: 1.4rem;
+  color: $color7;
+}
+
+/* Notification center (Super+H) */
+.nc {
+  background-color: $background;
+  color: $foreground;
+  padding: 10px;
+  border-radius: 12px;
+}
+
+.nc-header {
+  padding: 2px 4px 10px 4px;
+}
+
+.nc-title {
+  color: $color7;
+}
+
+.nc-clear {
+  font-size: 0.8rem;
+  padding: 3px 10px;
+  border-radius: 8px;
+  background-color: mix($background, $color1, 90%);
+  transition: background-color 0.2s ease;
+  &:hover { background-color: mix($background, $color2, 60%); color: $color7; }
+}
+
+.nc-item {
+  background-color: mix($background, $color1, 90%);
+  padding: 10px;
+  margin-bottom: 8px;
+  border-radius: 8px;
+}
+
+.nc-meta {
+  font-size: 0.7rem;
+  font-weight: normal;
+  color: $color3;
+}
+
+.nc-dismiss {
+  font-family: "Font Awesome 6 Free";
+  font-size: 0.75rem;
+  color: $color3;
+  padding: 0 2px;
+  &:hover { color: $color7; }
+}
+
+.nc-empty {
+  color: $color3;
+  font-weight: normal;
+}
+
+.nc-item .notif-icon-fallback {
+  font-size: 1.1rem;
 }

@@ -25,6 +25,14 @@ EWW_SETTINGS = os.path.join(CONFIG, "eww/settings.yuck")
 APP_RULES_CONF = os.path.join(CONFIG, "hypr/user/app-rules.conf")
 APP_RULES_JSON = os.path.join(CONFIG, "blomst-settings/app-rules.json")
 APPS_CONF = os.path.join(CONFIG, "hypr/user/apps.conf")
+FLOAT_OPTIONS = os.path.join(CONFIG, "blomst-settings/float-options.json")   # read by ~/scripts/float_sizes.py
+FLOAT_KEYS = {"float_size": "size", "float_position": "position"}
+NOTIF_OPTIONS = os.path.join(CONFIG, "blomst-settings/notifications.json")   # read by the eww notification handler
+NOTIF_KEYS = {"notif_popups": ("popups", bool), "notif_popup_seconds": ("popup_seconds", int),
+              "notif_history_limit": ("history_limit", int), "notif_in_stack": ("in_stack", bool),
+              "notif_hide_with_stack": ("hide_with_stack", bool)}
+NOTIF_BUS = ["busctl", "--user", "call", "org.freedesktop.Notifications", "/org/freedesktop/Notifications",
+             "org.blomst.NotificationHistory"]
 BROWSERS = [("firefox", "Firefox"), ("zen-browser", "Zen"), ("librewolf", "LibreWolf"), ("floorp", "Floorp"),
             ("brave", "Brave"), ("chromium", "Chromium"), ("google-chrome-stable", "Chrome"),
             ("vivaldi-stable", "Vivaldi"), ("qutebrowser", "qutebrowser")]
@@ -69,6 +77,9 @@ DEFAULTS = {
     "anim_speed": "normal", "ws_anim": "vertical",
     "idle_lock_min": 30, "idle_suspend_min": 60,
     "browser": "firefox",
+    "float_size": True, "float_position": True,
+    "notif_popups": True, "notif_popup_seconds": 10, "notif_history_limit": 50,
+    "notif_in_stack": True, "notif_hide_with_stack": True,
     "show_cpu": True, "show_temp": True, "show_mem": True, "show_disk": True, "show_music": True,
 }
 
@@ -182,6 +193,24 @@ def read_settings():
     m = re.search(r"^\s*\$browser\s*=\s*(.+?)\s*$", _read(APPS_CONF), re.M)
     out["browser"] = m.group(1) if m else DEFAULTS["browser"]
 
+    try:
+        with open(FLOAT_OPTIONS, encoding="utf-8") as f:
+            float_opts = json.load(f)
+    except (OSError, ValueError):
+        float_opts = {}
+    for key, name in FLOAT_KEYS.items():
+        out[key] = bool(float_opts.get(name, DEFAULTS[key])) if isinstance(float_opts, dict) else DEFAULTS[key]
+
+    try:
+        with open(NOTIF_OPTIONS, encoding="utf-8") as f:
+            notif_opts = json.load(f)
+    except (OSError, ValueError):
+        notif_opts = {}
+    if not isinstance(notif_opts, dict):
+        notif_opts = {}
+    for key, (name, kind) in NOTIF_KEYS.items():
+        out[key] = _parse(str(notif_opts[name]), kind, DEFAULTS[key]) if name in notif_opts else DEFAULTS[key]
+
     bar = dict(re.findall(r"\(defvar\s+(show-\w+)\s+(true|false)\)", _read(EWW_SETTINGS)))
     for key, var in BAR_KEYS.items():
         out[key] = bar.get(var, "true") == "true"
@@ -266,6 +295,23 @@ def write_setting(key, value):
     elif key in IDLE_KEYS:
         path, old = HYPRIDLE, _read(HYPRIDLE)
         new = idle_set(old, IDLE_KEYS[key], int(round(float(value))) * 60)
+    elif key in FLOAT_KEYS:
+        settings = read_settings()
+        data = {name: settings[k] for k, name in FLOAT_KEYS.items()}
+        data[FLOAT_KEYS[key]] = bool(value)
+        os.makedirs(os.path.dirname(FLOAT_OPTIONS), exist_ok=True)
+        with open(FLOAT_OPTIONS, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2)
+        return True
+    elif key in NOTIF_KEYS:
+        settings = read_settings()
+        data = {name: settings[k] for k, (name, _) in NOTIF_KEYS.items()}
+        name, kind = NOTIF_KEYS[key]
+        data[name] = bool(value) if kind is bool else int(round(float(value)))
+        os.makedirs(os.path.dirname(NOTIF_OPTIONS), exist_ok=True)
+        with open(NOTIF_OPTIONS, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2)
+        return True
     elif key == "browser":
         value = str(value).strip()
         if not value or "\n" in value:
@@ -305,6 +351,14 @@ def _reload_kitty(opacity):
                 subprocess.Popen(["kitty", "@", "--to", "unix:" + sock, "set-background-opacity", "--all", opacity], **quiet)
         subprocess.Popen(["pkill", "-USR1", "-x", "kitty"], **quiet)
     except OSError:
+        pass
+
+
+def clear_notifications():
+    """Empty the notification center (and any pop-ups still showing)."""
+    try:
+        subprocess.run(NOTIF_BUS + ["Clear"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=3)
+    except (OSError, subprocess.SubprocessError):
         pass
 
 

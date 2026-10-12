@@ -1,10 +1,33 @@
-(deflisten notifs :initial "" `python ~/.config/eww/scripts/notification_handler.py`)
+(deflisten notifs :initial '{"popups": "", "history": "", "count": 0}'
+  `python ~/.config/eww/scripts/notification_handler.py`)
 
 (defwindow notifications
            :monitor 0
            :geometry (geometry :x "2%"
                                :y "2%"
+                               :width "326px"
                                :anchor "top right")
            :stacking "overlay"
-           :hexpand true
-           (literal :content notifs))
+           :exclusive false
+           :focusable false
+           (literal :content {notifs.popups}))
+
+;; Notification center, toggled with the rest of the Super+H stack
+(defwidget notification-center []
+  (box :class "nc" :orientation "vertical" :space-evenly false
+    (box :class "nc-header" :orientation "horizontal" :space-evenly false
+      (label :class "nc-title" :hexpand true :xalign 0
+             :text "Notifications${notifs.count > 0 ? '  ${notifs.count}' : ''}")
+      (button :class "nc-clear" :visible {notifs.count > 0}
+              :onclick "busctl --user call org.freedesktop.Notifications /org/freedesktop/Notifications org.blomst.NotificationHistory Clear"
+              "Clear all"))
+    (scroll :vscroll true :hscroll false :vexpand true
+      (literal :content {notifs.history}))))
+
+(defwindow notification-center
+  :monitor 0
+  :geometry (geometry :x "0.8%" :y "737px" :width "260px" :height "687px" :anchor "top right")
+  :stacking "overlay"
+  :exclusive false
+  :focusable false
+  (notification-center))

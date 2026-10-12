@@ -13,13 +13,19 @@ window.
 | Keys | What it does |
 | --- | --- |
 | Super + S | Settings window |
-| Super + H | Widget popups |
+| Super + H | Widget popups and notification center |
 | Super + Shift + W | Wallpaper picker |
 | Super + 1 to 5 | Workspace 1 to 5 on the screen the mouse is on |
 | Super + Shift + 1 to 5 | Send the focused window to that workspace |
 | Super + 6 to 0 | Second screen's workspaces 1 to 5, from anywhere |
 
-Floating windows remember the size you give them (per app and kind of window) and reopen at that size.
+Floating windows remember the size and position you give them (per app and kind of window) and reopen that way. Both can be switched off in the settings window.
+
+Notifications pop up in the top right in the wallpaper colours. Super + H also opens a notification
+center under the calendar, where past notifications can be read, dismissed one by one or cleared.
+Pop-ups hide while it is open, and the history survives restarts (`~/.cache/eww/notification-history.json`).
+Do not disturb, how long pop-ups stay and how much history is kept are on the Notifications page of
+the settings window.
 
 ## What you need
 

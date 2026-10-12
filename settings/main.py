@@ -157,6 +157,10 @@ class Backend(QObject):
         self.appRulesChanged.emit()
 
     @Slot()
+    def clearNotifications(self):
+        cfg.clear_notifications()
+
+    @Slot()
     def openConfigFolder(self):
         folder = os.path.dirname(HERE)
         for cmd in (["code", folder], ["xdg-open", folder]):
