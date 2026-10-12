@@ -54,7 +54,7 @@ From the Arch repos (pacman):
 - **Desktop**: hyprlock, hypridle, hyprpaper, rofi-wayland, xdg-desktop-portal-hyprland,
   xdg-desktop-portal-gtk, gtk3, gtk4, qt6ct, kvantum, qt6-wayland
 - **Theming**: matugen, imagemagick, noto-fonts
-- **Settings window**: python, pyside6
+- **Settings window**: python, pyside6, python-psutil
 - **Tools the widgets call**: playerctl, pamixer, brightnessctl, ddcutil, lm_sensors, acpi,
   pavucontrol, curl
 - **Terminal apps**: zsh, neovim, yazi, bottom, lua51, lua51-luarocks
@@ -72,11 +72,18 @@ From the AUR (through yay, which the installer builds first):
 
 Built from source: **eww** (the bar and popups).
 
-It expects Hyprland and kitty to be installed already.
+It expects Hyprland and kitty to be installed already. Clone the repo to `~/blomst` before
+running it, since the scripts look for it there:
 
-Besides packages, the installer also backs up your existing configs to `*.bak`, links these
-dotfiles with stow, makes zsh the default shell, turns on NetworkManager and Bluetooth, and reboots. It does
-not touch your DNS settings.
+```sh
+git clone https://github.com/blomstt/blomst.git ~/blomst
+cd ~/blomst && ./INSTALL.sh
+```
+
+Besides packages, the installer also backs up your existing configs to `*.bak-<date>`, links these
+dotfiles with stow, makes zsh the default shell, turns on NetworkManager and Bluetooth, and asks
+before rebooting. It does not touch your DNS settings. `UNINSTALL.sh` restores only the backups
+the installer made.
 
 ### Optional extras
 
@@ -106,4 +113,4 @@ not tracked.
 
 `INSTALL.sh` sets this up on a fresh Arch install and `UNINSTALL.sh` unlinks it again. Both are
 adapted from the Zenities installers; read `INSTALL.sh` before running it, since it also changes
-your default shell and reboots at the end.
+your default shell and offers to reboot at the end.

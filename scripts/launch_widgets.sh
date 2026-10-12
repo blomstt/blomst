@@ -1,3 +1,4 @@
+#!/bin/bash
 # Notification options from Blomst Settings (Super + S)
 eval "$(python3 -c '
 import json, os

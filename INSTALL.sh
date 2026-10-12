@@ -4,14 +4,10 @@
 #
 # Read before running. It installs packages, backs up existing configs to *.bak,
 # links these dotfiles into your home folder with stow, switches the shell to zsh,
-# turns on NetworkManager and Bluetooth, and reboots.
+# turns on NetworkManager and Bluetooth, and offers to reboot.
+# Clone the repo to ~/blomst first; the paths below expect it there.
 
 exec > >(tee -a install-log.txt) 2>&1
-
-# Helper Function
-run_sudo() {
-  echo "$PASSWORD" | sudo -S $@
-}
 
 # Wrapper Configuration
 BLUE='\033[0;34m'
@@ -26,6 +22,7 @@ run_network() {
     shift
     local cmd="$@"
     local attempt=1
+    local max_attempts=5
 
     echo -e "${BLUE}================================================================${NC}"
     echo -e "${CYAN}  TASK: $task_name${NC}"
@@ -46,6 +43,10 @@ run_network() {
         if [ $? -eq 0 ]; then
             printf "\r${GREEN}  [OK] Task completed!                          ${NC}\n\n"
             break
+        elif [ $attempt -ge $max_attempts ]; then
+            printf "\r${RED}  [!] FATAL ERROR: Task '$task_name' failed after $max_attempts attempts!${NC}\n"
+            echo -e "${RED} Check 'install-log.txt' for details.${NC}"
+            exit 1
         else
             printf "\r${RED}  [!] Attempt $attempt failed. Retrying...      ${NC}"
             ((attempt++))
@@ -88,33 +89,37 @@ run_loader() {
 # Installation Functions
 backup_configs() {
   CONFIG_DIR="$HOME/.config"
-  DOTFILES_CONFIG="$HOME/blomst/.config"
-  BACKUP_SUFFIX=".bak"
+  DOTFILES="$HOME/blomst"
+  DOTFILES_CONFIG="$DOTFILES/.config"
+  # A timestamp keeps a second run from moving the new backup inside the old one
+  BACKUP_SUFFIX=".bak-$(date +%Y%m%d-%H%M%S)"
+  # UNINSTALL.sh reads this list so it only restores backups made here
+  MANIFEST="$HOME/.local/state/blomst/backups"
+  mkdir -p "$(dirname "$MANIFEST")"
+
+  backup() {
+    local path=$1
+    # Skip anything missing, and links that already point into the repo from an earlier run
+    if [ ! -e "$path" ] && [ ! -L "$path" ]; then
+      echo "$path not found; skipping backup"
+    elif [ -L "$path" ] && [[ $(readlink -f "$path") == "$DOTFILES"/* ]]; then
+      echo "$path is already linked to blomst; skipping backup"
+    else
+      echo "Backing up: $path"
+      mv "$path" "${path}${BACKUP_SUFFIX}"
+      printf '%s\t%s\n' "$path" "${path}${BACKUP_SUFFIX}" >> "$MANIFEST"
+    fi
+  }
 
   echo "Backing up configuration directories in $CONFIG_DIR based on dotfiles in $DOTFILES_CONFIG"
-  # Change to the .config folder
-  cd "$CONFIG_DIR" || { echo "Could not access $CONFIG_DIR"; exit 1; }
-
-  # Loop over every directory in the dotfiles repo
   for dir in "$DOTFILES_CONFIG"/*/; do
-    folder_name=$(basename "$dir")
-    if [ -d "$CONFIG_DIR/$folder_name" ]; then
-      echo "Backing up directory: $folder_name"
-      mv "$CONFIG_DIR/$folder_name" "$CONFIG_DIR/${folder_name}${BACKUP_SUFFIX}"
-    else
-      echo "Directory $folder_name not found in $CONFIG_DIR; skipping backup"
-    fi
+    backup "$CONFIG_DIR/$(basename "$dir")"
   done
 
+  # wallpapers, scripts and screenshots are folders, so this checks with -e rather than -f
   FILES=(.zshrc .zshenv .tmux.conf .p10k.zsh wallpapers scripts screenshots)
-
   for file in "${FILES[@]}"; do
-    if [ -f "$HOME/$file" ]; then
-      echo "Backing up file: $file"
-      mv "$HOME/$file" "$HOME/${file}${BACKUP_SUFFIX}"
-    else
-      echo "File $file not found; skipping backup"
-    fi
+    backup "$HOME/$file"
   done
 }
 
@@ -122,7 +127,7 @@ apply_dotfiles() {
   cd "$HOME/blomst" || { echo "Could not access $HOME/blomst"; exit 1; }
   stow .
 
-  cd $HOME
+  cd "$HOME" || exit 1
 }
 
 install_yay() {
@@ -133,9 +138,9 @@ install_yay() {
 
     run_network "Cloning Yay (Yet Another Yogurt)" "cd $HOME && rm -rf yay; git clone https://aur.archlinux.org/yay.git"
 
-    run_loader "Building Yay" "cd $HOME/yay && echo '$PASSWORD' | sudo -S -v && makepkg -s --noconfirm"
+    run_loader "Building Yay" "cd $HOME/yay && makepkg -s --noconfirm"
 
-    run_loader "Installing Yay Package" "cd $HOME/yay && echo '$PASSWORD' | sudo -S pacman -U --noconfirm *.pkg.tar.zst"
+    run_loader "Installing Yay Package" "cd $HOME/yay && sudo pacman -U --noconfirm *.pkg.tar.zst"
 
     run_loader "Cleaning up Yay build folder" "rm -rf $HOME/yay"
 }
@@ -150,7 +155,7 @@ install_eww() {
 
     run_loader "Compiling Eww (Cargo Build)" "cd $HOME/eww && cargo build --release --no-default-features --features=wayland"
 
-    run_loader "Installing Eww Binary to /usr/local/bin" "cd $HOME/eww/target/release && chmod +x ./eww && echo '$PASSWORD' | sudo -S cp ./eww /usr/local/bin/"
+    run_loader "Installing Eww Binary to /usr/local/bin" "cd $HOME/eww/target/release && chmod +x ./eww && sudo cp ./eww /usr/local/bin/"
 
     run_loader "Cleaning up Eww source" "cd $HOME && rm -rf eww"
 }
@@ -165,46 +170,46 @@ setup_scripts() {
 
 setup_network() {
     # Only turns NetworkManager on (the wifi menu uses it). DNS and other network settings are left alone.
-    run_loader "Enabling NetworkManager" "echo '$PASSWORD' | sudo -S systemctl enable --now NetworkManager"
+    run_loader "Enabling NetworkManager" "sudo systemctl enable --now NetworkManager"
 }
 
 setup_bluetooth() {
-    run_loader "Enabling & Starting Bluetooth Service" "echo '$PASSWORD' | sudo -S systemctl enable --now bluetooth.service"
-
-    run_loader "Configuring Bluetooth Audio modules" "echo '$PASSWORD' | sudo -S pactl load-module module-bluetooth-discover 2>/dev/null || true"
+    run_loader "Enabling & Starting Bluetooth Service" "sudo systemctl enable --now bluetooth.service"
 }
 
 setup_shell() {
-    if ! grep -q "/usr/bin/zsh" /etc/shells; then
-        run_loader "Adding Zsh to Valid Shells" "echo '/usr/bin/zsh' | echo '$PASSWORD' | sudo -S tee -a /etc/shells"
+    # Arch's zsh package normally adds itself to /etc/shells already
+    if ! grep -qx "/usr/bin/zsh" /etc/shells; then
+        run_loader "Adding Zsh to Valid Shells" "echo /usr/bin/zsh | sudo tee -a /etc/shells"
     fi
 
-    run_loader "Changing Default Shell to Zsh" "echo '$PASSWORD' | sudo -S chsh -s /usr/bin/zsh $USER"
+    run_loader "Changing Default Shell to Zsh" "sudo chsh -s /usr/bin/zsh $USER"
 }
 
-# Password Initialization for Sudo
+# Sudo setup: ask once, then keep the sudo timestamp fresh in the background.
+# The password itself is never stored in a variable.
 clear
 echo "    ┓ ┓"
 echo "    ┣┓┃┏┓┏┳┓┏╋"
 echo "    ┗┛┗┗┛┛┗┗┛┗"
 echo -e "${NC}"
 
-while true; do
-    echo -n "  Input sudo password: "
-    read -s PASSWORD
-    echo ""
-
-    if echo "$PASSWORD" | sudo -S -k -v > /dev/null 2>&1; then
-        echo -e "${GREEN}  [OK] Password confirmed. Installation started...${NC}\n"
-        break
-    else
-        echo -e "${RED}  [ERROR] Wrong password! Please try again.${NC}"
-    fi
+until sudo -v; do
+    echo -e "${RED}  [ERROR] Could not get sudo access. Please try again.${NC}"
 done
+echo -e "${GREEN}  [OK] Sudo access confirmed. Installation started...${NC}\n"
+
+while true; do
+    sudo -n true
+    sleep 50
+    kill -0 "$$" || exit
+done 2>/dev/null &
+SUDO_KEEPALIVE_PID=$!
+trap 'kill $SUDO_KEEPALIVE_PID 2>/dev/null' EXIT
 
 
 # Install necessary packages via pacman
-run_network "Syncing mirror & Installing base packages" "run_sudo pacman -Syu --needed --noconfirm base-devel rustup github-cli stow pamixer brightnessctl playerctl rofi-wayland hyprlock hypridle hyprpaper yazi neovim bottom networkmanager rustup zsh imagemagick acpi pavucontrol lua51 lua51-luarocks xdg-desktop-portal-hyprland xdg-desktop-portal-gtk gtk4 gtk3 qt6ct kvantum noto-fonts go matugen pyside6 qt6-wayland ddcutil lm_sensors curl python"
+run_network "Syncing mirror & Installing base packages" "sudo pacman -Syu --needed --noconfirm base-devel rustup github-cli stow pamixer brightnessctl playerctl rofi-wayland hyprlock hypridle hyprpaper yazi neovim bottom networkmanager rustup zsh imagemagick acpi pavucontrol lua51 lua51-luarocks xdg-desktop-portal-hyprland xdg-desktop-portal-gtk gtk4 gtk3 qt6ct kvantum noto-fonts go matugen pyside6 qt6-wayland ddcutil lm_sensors curl python python-psutil"
 
 # Install Rust toolchain
 run_network "Setting up Rust Toolchain" "rustup default stable"
@@ -219,7 +224,7 @@ run_loader  "Applying blomst dotfiles via Stow" "apply_dotfiles"
 install_yay
 
 # Install additional packages via yay
-run_network "Installing AUR Packages" "echo '$PASSWORD' | yay -S --needed --noconfirm --sudoloop fastfetch ttf-iosevka otf-hermit-nerd gvfs dbus libdbusmenu-glib libdbusmenu-gtk3 gtk-layer-shell zoxide eza fzf jq socat tmux nvm btop hyprshot bluez bluez-utils bluez-obex bluetuith python-gobject zsh-theme-powerlevel10k-git"
+run_network "Installing AUR Packages" "yay -S --needed --noconfirm --sudoloop fastfetch ttf-iosevka otf-hermit-nerd gvfs dbus libdbusmenu-glib libdbusmenu-gtk3 gtk-layer-shell zoxide eza fzf jq socat tmux nvm btop hyprshot bluez bluez-utils bluez-obex bluetuith python-gobject zsh-theme-powerlevel10k-git"
 
 # Eww installation
 install_eww
@@ -240,7 +245,9 @@ setup_shell
 run_loader "Initializing Wallpaper & Colors" "bash $HOME/.config/eww/scripts/change-wallpaper.sh 15 -g" 
 
 # Reboot the system
-echo -e "\n${GREEN}Installation complete. The system will now reboot. ${NC}"
-sleep 3 
-run_sudo reboot
+echo -e "\n${GREEN}Installation complete. A reboot is needed for everything to take effect.${NC}"
+read -rp "  Reboot now? [y/N] " answer
+if [[ $answer == [yY]* ]]; then
+    sudo reboot
+fi
 

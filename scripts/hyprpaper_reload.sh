@@ -1,3 +1,4 @@
+#!/bin/bash
 # WAYBAR START
 #
 # by Abuku (2024)

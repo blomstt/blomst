@@ -1,3 +1,4 @@
+#!/bin/bash
 calendar(){
 LOCK_FILE="$HOME/.cache/eww-calendar.lock"
 EWW_BIN="$HOME/eww/target/release/eww"
