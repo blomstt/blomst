@@ -1,0 +1,15 @@
+singleton Ui 1.0 Ui.qml
+Icon 1.0 Icon.qml
+PillButton 1.0 PillButton.qml
+NavItem 1.0 NavItem.qml
+SectionTitle 1.0 SectionTitle.qml
+Note 1.0 Note.qml
+SettingRow 1.0 SettingRow.qml
+SettingSlider 1.0 SettingSlider.qml
+SettingSwitch 1.0 SettingSwitch.qml
+Choice 1.0 Choice.qml
+SettingChoice 1.0 SettingChoice.qml
+Field 1.0 Field.qml
+PageScroll 1.0 PageScroll.qml
+QuickToggle 1.0 QuickToggle.qml
+Card 1.0 Card.qml

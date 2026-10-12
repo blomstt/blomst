@@ -25,6 +25,15 @@ EWW_SETTINGS = os.path.join(CONFIG, "eww/settings.yuck")
 APP_RULES_CONF = os.path.join(CONFIG, "hypr/user/app-rules.conf")
 APP_RULES_JSON = os.path.join(CONFIG, "blomst-settings/app-rules.json")
 APPS_CONF = os.path.join(CONFIG, "hypr/user/apps.conf")
+INPUTS = os.path.join(CONFIG, "hypr/user/inputs.conf")
+MONITORS = os.path.join(CONFIG, "hypr/user/monitors.conf")
+KEYBINDS = os.path.join(CONFIG, "hypr/core/keybinds.conf")
+CORE_EXECS = os.path.join(CONFIG, "hypr/core/execs.conf")
+USER_EXECS = os.path.join(CONFIG, "hypr/user/execs.conf")
+NIGHT_LIGHT = os.path.join(CONFIG, "blomst-settings/night-light.json")       # read by ~/scripts/night_light.sh
+NIGHT_LIGHT_SCRIPT = os.path.join(HOME, "scripts/night_light.sh")
+IDLE_TOGGLE = os.path.join(CONFIG, "eww/scripts/toggle-idle.sh")
+XKB_RULES = "/usr/share/X11/xkb/rules/base.lst"
 FLOAT_OPTIONS = os.path.join(CONFIG, "blomst-settings/float-options.json")   # read by ~/scripts/float_sizes.py
 FLOAT_KEYS = {"float_size": "size", "float_position": "position"}
 NOTIF_OPTIONS = os.path.join(CONFIG, "blomst-settings/notifications.json")   # read by the eww notification handler
@@ -36,6 +45,11 @@ NOTIF_BUS = ["busctl", "--user", "call", "org.freedesktop.Notifications", "/org/
 BROWSERS = [("firefox", "Firefox"), ("zen-browser", "Zen"), ("librewolf", "LibreWolf"), ("floorp", "Floorp"),
             ("brave", "Brave"), ("chromium", "Chromium"), ("google-chrome-stable", "Chrome"),
             ("vivaldi-stable", "Vivaldi"), ("qutebrowser", "qutebrowser")]
+TERMINALS = [("kitty", "kitty"), ("alacritty", "Alacritty"), ("foot", "foot"), ("wezterm", "WezTerm"),
+             ("ghostty", "Ghostty"), ("konsole", "Konsole"), ("gnome-terminal", "GNOME Terminal")]
+APP_VARS = {"browser": "$browser", "terminal": "$terminal"}       # key -> variable in apps.conf
+LAYOUT_SWITCHES = {"none": "", "alt_shift": "grp:alt_shift_toggle", "caps": "grp:caps_toggle",
+                   "ctrl_space": "grp:ctrl_space_toggle"}
 SECOND_SCREEN_OFFSET = 5      # second monitor owns workspaces 6-10 (see ~/scripts/workspace.sh)
 
 BORDER_SPIN_ON = "animation = borderangle, 1, 60, linear, loop"
@@ -53,7 +67,18 @@ HYPR_KEYS = {
     "blur_passes": (APPEARANCE, ["decoration", "blur"], "passes", int),
     "shadow_enabled": (APPEARANCE, ["decoration", "shadow"], "enabled", bool),
     "animations_enabled": (ANIMATIONS, ["animations"], "enabled", bool),
+    "layout": (APPEARANCE, ["general"], "layout", str),
+    "kb_layout": (INPUTS, ["input"], "kb_layout", str),
+    "repeat_rate": (INPUTS, ["input"], "repeat_rate", int),
+    "repeat_delay": (INPUTS, ["input"], "repeat_delay", int),
+    "mouse_sensitivity": (INPUTS, ["input"], "sensitivity", float),
+    "accel_profile": (INPUTS, ["input"], "accel_profile", str),
+    "follow_mouse": (INPUTS, ["input"], "follow_mouse", int),
+    "natural_scroll": (INPUTS, ["input"], "natural_scroll", bool),
+    "touchpad_natural_scroll": (INPUTS, ["input", "touchpad"], "natural_scroll", bool),
 }
+# Only these values are accepted for the text options above
+HYPR_CHOICES = {"layout": ("dwindle", "master"), "accel_profile": ("flat", "adaptive"), "follow_mouse": (0, 1)}
 # Normal-speed duration of each animation; the speed setting scales these.
 ANIM_BASE = {
     "windowsIn": 5, "windowsOut": 3, "windowsMove": 5, "layersIn": 4, "layersOut": 3,
@@ -76,7 +101,11 @@ DEFAULTS = {
     "border_spin": True, "terminal_opacity": 0.78,
     "anim_speed": "normal", "ws_anim": "vertical",
     "idle_lock_min": 30, "idle_suspend_min": 60,
-    "browser": "firefox",
+    "browser": "firefox", "terminal": "kitty",
+    "layout": "dwindle", "kb_layout": "us", "layout_switch": "none",
+    "repeat_rate": 25, "repeat_delay": 600, "mouse_sensitivity": 0.0, "accel_profile": "adaptive",
+    "follow_mouse": 1, "natural_scroll": False, "touchpad_natural_scroll": False,
+    "idle_enabled": True, "night_light": False, "night_light_temp": 4500,
     "float_size": True, "float_position": True,
     "notif_popups": True, "notif_popup_seconds": 10, "notif_history_limit": 50,
     "notif_in_stack": True, "notif_hide_with_stack": True,
@@ -124,12 +153,32 @@ def hypr_get(text, block, option):
     return lines[i].split("=", 1)[1].split("#", 1)[0].strip()
 
 
+def _find_block_end(lines, block):
+    """Index of the closing brace of `block`, or -1."""
+    stack = []
+    for i, line in enumerate(lines):
+        if _BLOCK_OPEN.match(line):
+            stack.append(_BLOCK_OPEN.match(line).group(1))
+        elif _BLOCK_CLOSE.match(line):
+            if stack == block:
+                return i
+            if stack:
+                stack.pop()
+    return -1
+
+
 def hypr_set(text, block, option, value):
-    """Return `text` with the option changed. Unknown options are left alone."""
+    """Return `text` with the option changed, added to `block` if it is missing there.
+    If the block itself is missing the text is left alone."""
     lines = text.split("\n")
     i = _find_option(lines, block, option)
     if i < 0:
-        return text
+        end = _find_block_end(lines, block)
+        if end < 0:
+            return text
+        indent = re.match(r"^\s*", lines[end]).group(0) + "    "
+        lines.insert(end, indent + option + " = " + value)
+        return "\n".join(lines)
     head, rest = lines[i].split("=", 1)
     comment = ""
     if "#" in rest:
@@ -139,6 +188,8 @@ def hypr_set(text, block, option, value):
 
 
 def _format(value, kind):
+    if kind is str:
+        return str(value).strip()
     if kind is bool:
         return "true" if value else "false"
     if kind is int:
@@ -149,6 +200,8 @@ def _format(value, kind):
 def _parse(raw, kind, fallback):
     if raw is None:
         return fallback
+    if kind is str:
+        return raw if raw else fallback
     try:
         if kind is bool:
             return raw.lower() in ("true", "yes", "on", "1")
@@ -190,8 +243,19 @@ def read_settings():
         seconds = idle_get(idle, needle)
         out[key] = max(1, round(seconds / 60)) if seconds else DEFAULTS[key]
 
-    m = re.search(r"^\s*\$browser\s*=\s*(.+?)\s*$", _read(APPS_CONF), re.M)
-    out["browser"] = m.group(1) if m else DEFAULTS["browser"]
+    apps = _read(APPS_CONF)
+    for key, var in APP_VARS.items():
+        m = re.search(r"^\s*" + re.escape(var) + r"\s*=\s*(.+?)\s*$", apps, re.M)
+        out[key] = m.group(1) if m else DEFAULTS[key]
+
+    options = hypr_get(cache.get(INPUTS, ""), ["input"], "kb_options") or ""
+    found = re.search(r"grp:\w+", options)
+    out["layout_switch"] = next((k for k, v in LAYOUT_SWITCHES.items() if found and v == found.group(0)), "none")
+
+    out["idle_enabled"] = _running("hypridle")
+    night = _read_json(NIGHT_LIGHT, {})
+    out["night_light"] = bool(night.get("enabled", DEFAULTS["night_light"]))
+    out["night_light_temp"] = int(night.get("temperature", DEFAULTS["night_light_temp"]))
 
     try:
         with open(FLOAT_OPTIONS, encoding="utf-8") as f:
@@ -215,6 +279,38 @@ def read_settings():
     for key, var in BAR_KEYS.items():
         out[key] = bar.get(var, "true") == "true"
     return out
+
+
+def _read_json(path, fallback):
+    try:
+        with open(path, encoding="utf-8") as f:
+            data = json.load(f)
+        return data if isinstance(data, type(fallback)) else fallback
+    except (OSError, ValueError):
+        return fallback
+
+
+def _write_json(path, data):
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    tmp = path + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2)
+    os.replace(tmp, path)
+
+
+def _running(name):
+    try:
+        return subprocess.run(["pgrep", "-x", name], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode == 0
+    except OSError:
+        return False
+
+
+def _detach(cmd):
+    try:
+        subprocess.Popen(cmd, start_new_session=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        return True
+    except OSError:
+        return False
 
 
 def _scaled(name, factor):
@@ -269,6 +365,10 @@ def write_setting(key, value):
     """Change one setting on disk. Returns True if a file was changed."""
     if key in HYPR_KEYS:
         path, block, option, kind = HYPR_KEYS[key]
+        if key in HYPR_CHOICES and value not in HYPR_CHOICES[key]:
+            return False
+        if key == "kb_layout" and not valid_kb_layout(value):
+            return False
         old = _read(path)
         new = hypr_set(old, block, option, _format(value, kind))
     elif key == "border_spin":
@@ -312,16 +412,43 @@ def write_setting(key, value):
         with open(NOTIF_OPTIONS, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2)
         return True
-    elif key == "browser":
+    elif key in APP_VARS:
         value = str(value).strip()
         if not value or "\n" in value:
             return False
+        var = APP_VARS[key]
         path, old = APPS_CONF, _read(APPS_CONF)
-        line = "$browser = " + value
-        if re.search(r"^\s*\$browser\s*=", old, re.M):
-            new = re.sub(r"^\s*\$browser\s*=.*$", lambda m: line, old, flags=re.M)
+        line = var + " = " + value
+        if re.search(r"^\s*" + re.escape(var) + r"\s*=", old, re.M):
+            new = re.sub(r"^\s*" + re.escape(var) + r"\s*=.*$", lambda m: line, old, flags=re.M)
         else:
             new = old.rstrip("\n") + "\n" + line + "\n"
+    elif key == "layout_switch":
+        if value not in LAYOUT_SWITCHES:
+            return False
+        path, old = INPUTS, _read(INPUTS)
+        current = hypr_get(old, ["input"], "kb_options") or ""
+        parts = [o for o in current.split(",") if o.strip() and not o.strip().startswith("grp:")]
+        if LAYOUT_SWITCHES[value]:
+            parts.append(LAYOUT_SWITCHES[value])
+        new = hypr_set(old, ["input"], "kb_options", ",".join(p.strip() for p in parts))
+    elif key == "idle_enabled":
+        if bool(value) == _running("hypridle"):
+            return False
+        return _detach(["bash", IDLE_TOGGLE])
+    elif key in ("night_light", "night_light_temp"):
+        data = _read_json(NIGHT_LIGHT, {})
+        data.setdefault("enabled", DEFAULTS["night_light"])
+        data.setdefault("temperature", DEFAULTS["night_light_temp"])
+        if key == "night_light":
+            data["enabled"] = bool(value)
+        else:
+            data["temperature"] = min(6500, max(1000, int(round(float(value)))))
+        _write_json(NIGHT_LIGHT, data)
+        if data["enabled"]:
+            ensure_night_light_autostart()
+        apply_night_light()
+        return True
     elif key in BAR_KEYS:
         settings = read_settings()
         if settings[key] == bool(value) and os.path.isfile(os.path.realpath(EWW_SETTINGS)):
@@ -360,6 +487,236 @@ def clear_notifications():
         subprocess.run(NOTIF_BUS + ["Clear"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=3)
     except (OSError, subprocess.SubprocessError):
         pass
+
+
+# ---------- input ----------
+
+def kb_layouts():
+    """Every keyboard layout xkb knows, as (code, name) pairs."""
+    out, inside = [], False
+    for line in _read(XKB_RULES).split("\n"):
+        if line.startswith("!"):
+            inside = line.strip() == "! layout"
+            continue
+        parts = line.split(None, 1)
+        if inside and len(parts) == 2:
+            out.append((parts[0], parts[1].strip()))
+    return out
+
+
+def valid_kb_layout(value):
+    codes = {c for c, _ in kb_layouts()}
+    wanted = [v.strip() for v in str(value).split(",")]
+    if not codes:                     # cannot check on this machine; trust it
+        return all(re.fullmatch(r"[a-z]{2,3}", v) for v in wanted)
+    return all(v in codes for v in wanted)
+
+
+# ---------- night light ----------
+
+def night_light_available():
+    return shutil.which("hyprsunset") is not None
+
+
+def apply_night_light():
+    """Start, retune or stop hyprsunset to match the saved setting."""
+    data = _read_json(NIGHT_LIGHT, {})
+    quiet = dict(stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    try:
+        subprocess.run(["pkill", "-x", "hyprsunset"], **quiet)
+    except OSError:
+        pass
+    if data.get("enabled") and night_light_available():
+        _detach(["hyprsunset", "-t", str(int(data.get("temperature", DEFAULTS["night_light_temp"])))])
+
+
+def ensure_night_light_autostart():
+    """Hyprland should restore the night light at login."""
+    line = "exec-once = ~/scripts/night_light.sh"
+    text = _read(CORE_EXECS)
+    if text and "night_light.sh" not in text:
+        _write(CORE_EXECS, text.rstrip("\n") + "\n\n# Night light (Blomst Settings)\n" + line + "\n")
+
+
+# ---------- displays ----------
+
+def _hyprctl_json(*args):
+    try:
+        out = subprocess.run(["hyprctl", *args, "-j"], capture_output=True, text=True, timeout=2).stdout
+        return json.loads(out)
+    except (OSError, ValueError, subprocess.SubprocessError):
+        return []
+
+
+def _clean_mode(mode):
+    return mode[:-2] if mode.endswith("Hz") else mode
+
+
+def _valid_scales(width, height):
+    out = []
+    for s in (1, 1.25, 4 / 3, 1.5, 1.6, 5 / 3, 2):
+        w, h = width / s, height / s
+        if abs(w - round(w)) < 0.01 and abs(h - round(h)) < 0.01:
+            out.append(round(s, 6))
+    return out
+
+
+def monitors():
+    out = []
+    for m in _hyprctl_json("monitors"):
+        modes, seen = [], set()
+        for mode in m.get("availableModes", []):
+            res, _, hz = _clean_mode(mode).partition("@")
+            label = "%s @ %s Hz" % (res.replace("x", " × "), round(float(hz or 0)))
+            if label not in seen:
+                seen.add(label)
+                modes.append({"value": _clean_mode(mode), "label": label})
+        current = "%dx%d@%.2f" % (m["width"], m["height"], m["refreshRate"])
+        out.append({
+            "name": m["name"], "description": m.get("description", ""),
+            "mode": current, "modes": modes,
+            "scale": round(float(m.get("scale", 1)), 6),
+            "scales": _valid_scales(m["width"], m["height"]),
+            "x": m.get("x", 0), "y": m.get("y", 0), "width": m["width"], "height": m["height"],
+        })
+    return out
+
+
+def _closest_mode(mon, mode):
+    """The listed mode that best matches `mode` (refresh rates come back rounded)."""
+    res, _, hz = mode.partition("@")
+    best = None
+    for m in mon["modes"]:
+        r, _, h = m["value"].partition("@")
+        if r == res:
+            diff = abs(float(h or 0) - float(hz or 0))
+            if best is None or diff < best[0]:
+                best = (diff, m["value"])
+    return best[1] if best else mode
+
+
+def monitor_lines(mons):
+    """`monitor = ...` lines for these monitors, laid out left to right in their current order."""
+    lines, x = {}, 0
+    for m in sorted(mons, key=lambda m: m["x"]):
+        res = m["mode"].partition("@")[0]
+        w, h = (int(v) for v in res.split("x"))
+        scale = m["scale"]
+        lines[m["name"]] = "%s, %s, %dx%d, %s" % (m["name"], m["mode"], x, m["y"], ("%.6f" % scale).rstrip("0").rstrip("."))
+        x += round(w / scale)
+    return lines
+
+
+def apply_monitor_lines(lines):
+    ok = True
+    for line in lines.values():
+        try:
+            r = subprocess.run(["hyprctl", "keyword", "monitor", line], capture_output=True, text=True, timeout=3)
+            ok = ok and r.returncode == 0 and "error" not in r.stdout.lower()
+        except (OSError, subprocess.SubprocessError):
+            ok = False
+    return ok
+
+
+def write_monitor_lines(lines):
+    text = _read(MONITORS)
+    for name, line in lines.items():
+        pattern = r"^\s*monitor\s*=\s*" + re.escape(name) + r"\s*,.*$"
+        if re.search(pattern, text, re.M):
+            text = re.sub(pattern, lambda m: "monitor = " + line, text, flags=re.M)
+        else:
+            text = "monitor = " + line + "\n" + text
+    _write(MONITORS, text)
+
+
+# ---------- keybinds ----------
+
+MOD_NAMES = {"SUPER": "Super", "SHIFT": "Shift", "CTRL": "Ctrl", "CONTROL": "Ctrl", "ALT": "Alt"}
+KEY_NAMES = {"RETURN": "Enter", "SPACE": "Space", "PRINT": "Print", "mouse_down": "Scroll down",
+             "mouse_up": "Scroll up", "mouse:272": "Left drag", "mouse:273": "Right drag",
+             "XF86AudioRaiseVolume": "Volume up", "XF86AudioLowerVolume": "Volume down",
+             "XF86AudioMute": "Mute", "XF86AudioMicMute": "Mute microphone",
+             "XF86MonBrightnessUp": "Brightness up", "XF86MonBrightnessDown": "Brightness down"}
+DIRECTIONS = {"l": "left", "r": "right", "u": "up", "d": "down"}
+
+
+def _describe(dispatcher, arg, apps):
+    arg = arg.strip()
+    if dispatcher == "exec":
+        floating = arg.startswith("[float")
+        command = re.sub(r"^\[[^\]]*\]\s*", "", arg)
+        for var, val in apps.items():
+            command = command.replace(var, val)
+        return command + (" (floating)" if floating else "")
+    if dispatcher in ("workspace", "movetoworkspace"):
+        return ("Go to workspace " if dispatcher == "workspace" else "Send window to workspace ") + arg.replace("e+1", "next").replace("e-1", "previous")
+    if dispatcher in ("movefocus", "movewindow"):
+        return ("Focus " if dispatcher == "movefocus" else "Move window ") + DIRECTIONS.get(arg, arg)
+    if dispatcher in ("resizeactive", "moveactive"):
+        return ("Resize window " if dispatcher == "resizeactive" else "Move floating window ") + arg
+    if dispatcher == "layoutmsg" and arg == "togglesplit":
+        return "Switch split direction"
+    return {"killactive": "Close window", "togglefloating": "Float or tile window", "fullscreen": "Fullscreen",
+            "movewindow": "Drag to move window", "resizewindow": "Drag to resize window"}.get(dispatcher, (dispatcher + " " + arg).strip())
+
+
+def read_keybinds():
+    """Binds from keybinds.conf grouped under the comment above them."""
+    text = _read(KEYBINDS)
+    variables = dict(re.findall(r"^\s*(\$\w+)\s*=\s*(\w+)", text, re.M))
+    apps = dict(re.findall(r"^\s*(\$\w+)\s*=\s*(.+?)\s*$", _read(APPS_CONF), re.M))
+    groups, title = [], "Other"
+    for line in text.split("\n"):
+        stripped = line.strip()
+        if stripped.startswith("#"):
+            heading = stripped.lstrip("#").strip()
+            if heading and not heading.lower().startswith(("1-5", "keybinds")):
+                title = heading
+            continue
+        m = re.match(r"^bind\w*\s*=\s*([^,]*),\s*([^,]+),\s*([^,]+)(?:,\s*(.*))?$", stripped)
+        if not m:
+            continue
+        mods, key, dispatcher, arg = m.group(1), m.group(2).strip(), m.group(3).strip(), (m.group(4) or "").split("#")[0]
+        for var, val in variables.items():
+            mods = mods.replace(var, val)
+        names = [MOD_NAMES.get(w.upper(), w.title()) for w in mods.split()]
+        keys = " + ".join(names + [KEY_NAMES.get(key, key.upper() if len(key) == 1 else key)])
+        if not groups or groups[-1]["title"] != title:
+            groups.append({"title": title, "binds": []})
+        groups[-1]["binds"].append({"keys": keys, "action": _describe(dispatcher, arg, apps)})
+    return groups
+
+
+# ---------- startup apps ----------
+
+def read_autostart():
+    return [m.strip() for m in re.findall(r"^\s*exec-once\s*=\s*(.+)$", _read(USER_EXECS), re.M)]
+
+
+def write_autostart(commands):
+    lines = ["# Auto Start Apps. Written by Blomst Settings (the Startup page)."]
+    lines += ["exec-once = " + c for c in commands]
+    _write(USER_EXECS, "\n".join(lines) + "\n")
+
+
+def add_autostart(command):
+    command = command.strip()
+    if not command or "\n" in command:
+        return False
+    current = read_autostart()
+    if command in current:
+        return False
+    write_autostart(current + [command])
+    _detach(["sh", "-c", command])      # start it now too, like it would at login
+    return True
+
+
+def remove_autostart(command):
+    write_autostart([c for c in read_autostart() if c != command])
+
+
+def installed_terminals():
+    return [(cmd, name) for cmd, name in TERMINALS if shutil.which(cmd)]
 
 
 # ---------- palette ----------

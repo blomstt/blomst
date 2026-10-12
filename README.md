@@ -12,7 +12,7 @@ window.
 
 | Keys | What it does |
 | --- | --- |
-| Super + S | Settings window |
+| Super + S | Settings window (Ctrl + F searches every setting and keybind) |
 | Super + H | Widget popups and notification center |
 | Super + Shift + W | Wallpaper picker |
 | Super + 1 to 5 | Workspace 1 to 5 on the screen the mouse is on |
@@ -69,6 +69,7 @@ No particular apps are required. Some things simply light up if you have them:
 - **Music widget**: shows whatever any MPRIS player is playing (via `playerctl`).
 - **Code - OSS**: gets the wallpaper palette if it is installed; skipped otherwise.
 - **GTK apps**: follow the palette; older GTK 3 apps need `adw-gtk-theme` for full effect.
+- **Night light**: install `hyprsunset` and it appears on the Displays page of the settings window.
 
 Things tied to my hardware that you will want to change:
 
@@ -83,7 +84,8 @@ not tracked.
 
 - `.config/` : the configs themselves, symlinked into `~/.config`
 - `scripts/` : helper scripts, symlinked to `~/scripts`
-- `settings/` : the settings window (Python and Qt Quick, needs `pyside6`)
+- `settings/` : the settings window (Python and Qt Quick, needs `pyside6`). `backend.py` reads and
+  writes the config files, `pages/` holds one file per page and `components/` the shared pieces
 - `.config/matugen/templates/` : colour templates, one per themed app
 
 `INSTALL.sh` sets this up on a fresh Arch install and `UNINSTALL.sh` unlinks it again. Both are
