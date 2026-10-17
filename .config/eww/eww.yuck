@@ -20,6 +20,8 @@
 (deflisten music :initial "" "playerctl --player=%any --follow metadata --format '{{ title }}' || true")
 (deflisten artist :initial "" "playerctl --player=%any --follow metadata --format '{{ artist }}' || true")
 (deflisten current-music-cover :initial "" "~/.config/eww/scripts/get-music-cover.sh")
+;; device-control (Super + H): {state, icon, tooltip} for each tile
+(deflisten audio-state :initial '{"volume":0,"state":"","icon":"󰕾","tooltip":""}' "~/.config/eww/scripts/get-audio-state.sh")
 ;;;;;;;;;;;;;;;;;;;;;;
 
 ;;;;; Defpolls ;;;;;
@@ -43,8 +45,9 @@
 (defpoll current-music-seek :interval "1s" "~/.config/eww/scripts/get-music-seek.sh")
 (defpoll current-wifi :interval "5s" "~/.config/eww/scripts/get-network.sh")
 (defpoll current-bluetooth :interval "5s" "~/.config/eww/scripts/get-bluetooth.sh")
-(defpoll bluetooth-status :interval "5s" "~/.config/eww/scripts/get-bluetooth-status.sh")
 (defpoll wifi-strength :interval "5s" "~/.config/eww/scripts/get-network-strength.sh")
+(defpoll wifi-state :interval "3s" :initial '{"state":"","icon":"󰤮","tooltip":""}' "~/.config/eww/scripts/get-wifi-state.sh")
+(defpoll bluetooth-state :interval "2s" :initial '{"state":"","icon":"󰂯","tooltip":""}' "~/.config/eww/scripts/get-bluetooth-state.sh")
 (defpoll volume-icon :interval "1s" "~/.config/eww/scripts/get-volume-icons.sh")
 (defpoll microphone-status :interval "1s" :initial "false" "~/.config/eww/scripts/get-microphone-status.sh")
 (defpoll calendar-day :interval "10h" "date '+%d'")
@@ -61,6 +64,7 @@
 (include "settings.yuck")
 
 (include "widgets/bar.yuck")
+(include "widgets/airpods.yuck")
 (include "widgets/side-bar.yuck")
 (include "widgets/wallpaper.yuck")
 (include "widgets/resource-monitor.yuck")
@@ -68,3 +72,4 @@
 (include "widgets/notifications.yuck")
 (include "widgets/custom-calendar.yuck")
 (include "widgets/music-control.yuck")
+(include "widgets/osd.yuck")

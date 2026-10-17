@@ -1,40 +1,57 @@
 .side-bar {
-  background-color: $background;
-  padding: 4px;
-  border-radius: 12px;
+  background-color: $card;
+  padding: $space-1;
+  border-radius: $radius-lg;
+}
+
+/* Every icon in the bar: one Nerd Font (Iosevka has no icons, so each one used to come from a
+   different fallback font), one size, one box and one colour, so they line up. */
+$bar-icon-font: $font-icon;
+$bar-icon: $text-dim;
+$bar-icon-hover: $text;
+
+.power-vert, .toggle-idle, .wifi-icon-vert, .volume-icon-vert, .brightness-icon-vert,
+.workspace-vert, .powermenu-vert, .music-control-vert {
+  font-family: $bar-icon-font;
+  font-weight: normal;
+}
+
+.power-vert, .toggle-idle, .wifi-icon-vert, .volume-icon-vert, .brightness-icon-vert {
+  font-size: 16px;
+  min-width: 25px;
+  min-height: 28px;
+  padding: 0;
+  margin: 0;
+  color: $bar-icon;
+  transition: color 0.2s ease;
+
+  &:hover { color: $bar-icon-hover; }
 }
 
 /* Workspaces */
 .workspaces-vert {
-  font-weight: 900;
-  font-size: 0.75rem;
+  font-size: 13px;
   margin-bottom: 12px;
 }
 
 .workspace-vert {
-  transition: color 0.3s ease-in-out;
+  min-width: 25px;
+  min-height: 20px;
+}
 
-  /* Main screen: light */
-  &.main {
-    color: $color7;
-    &.current { color: lighten($color7, 20%); }
-  }
+.workspace-vert {
+  transition: color 0.2s ease;
+  color: $text-faint;
 
-  /* Second screen: dark */
-  &.second {
-    color: $color3;
-    &.current { color: $color5; }
-  }
-
-  &:hover {
-    color: mix($foreground, $color2, 70%);
-  }
+  &.main.current, &.second.current { color: $accent; }
+  &.visible { color: $text-dim; }
+  &:hover { color: $text; }
 }
 
 .musicbar-vert trough {
   all: unset;
-  background-color: mix($background, $foreground, 80%);
-  border-radius: 2px;
+  background-color: $track;
+  border-radius: $radius-sm;
   min-height: 80px;
   min-width: 3px;
 }
@@ -45,8 +62,8 @@
 
 .musicbar-vert trough highlight {
   min-width: 3px;
-  background-color: mix($color6, $foreground, 90%);
-  border-radius: 2px;
+  background-color: $accent;
+  border-radius: $radius-sm;
 }
 
 .music-vert{
@@ -55,7 +72,7 @@
 
 /* Same size as before (a bigger font widens the whole bar); brighter instead */
 .music-title-vert {
-  color: $color7;
+  color: $text;
 }
 
 .music-control-vert{
@@ -68,53 +85,40 @@
 	min-height: 25px;
 	min-width: 12px;
 	margin: 8px 0px;
-  border-radius: 4px;
+  border-radius: $radius-sm;
 }
 
 
-/* Power Menu */
-.power-vert {
-  font-size: 1.22rem;
-  color: $foreground;
-  padding: 0 5px;
-  transition: color 0.3s ease-in-out, background-color 0.3s ease-in-out;
-
-  &:hover {
-    color: mix($background, $foreground, 95%);
-  }
-}
-
-/* Power Options */
+/* Power Options (shown when hovering the launcher icon) */
 .powermenu-vert {
-  font-family: "Font Awesome 6 Free";
-  font-size: 1rem;
+  font-size: 15px;
   padding: 2px 0 4px 0;
-  color: mix($color6, $background, 95%);
+  color: $bar-icon;
 }
 
 .suspend,
 .shutdown,
 .lock,
-.reboot {
-  padding: 0 5px;
-  transition: color 0.3s ease-in-out;
+.reboot,
+.exit {
+  min-width: 25px;
+  min-height: 26px;
+  transition: color 0.2s ease;
 
-  &:hover {
-    color: mix($background, $color6, 65%);
-  }
+  &:hover { color: $bar-icon-hover; }
 }
 
 /* Clock & Battery */
 .clock-vert {
-  color: $color6;
-  padding: 0px 5px;
+  color: $bar-icon;
+  min-width: 25px;
 }
 
 .batterybar-vert,
 .memorybar-vert {
   margin-left: 12px;
-  color: mix($color3, $foreground, 90%);
-  background-color: mix($background, $foreground, 80%);
+  color: $bar-icon;
+  background-color: $track;
 }
 
 .battery-icon-vert,
@@ -125,7 +129,7 @@
 
 .battery-vert,
 .memory-vert {
-  color: mix($color3, $foreground, 90%);
+  color: $bar-icon;
   padding: 4px 0;
 }
 
@@ -134,70 +138,81 @@
 .device,
 .time-vert {
   margin: 2px 0;
-  padding: 4px 0;
-  border-radius: 8px;
-  background-color: mix($background, $color6, 95%);
+  padding: $space-1 0;
+  border-radius: $radius-md;
+  background-color: $inner;
 }
 
 /* Brightness & Volume Bars */
 .brightnessbar-vert,
 .volbar-vert {
   trough {
-    background-color: mix($background, $foreground, 80%);
-    border-radius: 5px;
+    background-color: $track;
+    border-radius: $radius-sm;
     min-height: 30px;
     min-width: 8px;
     margin: 4px;
 
     highlight {
       min-height: 8px;
-      border-radius: 5px;
+      border-radius: $radius-sm;
     }
   }
 }
 
 .brightnessbar-vert trough highlight {
-  background-color: mix($color6, $foreground, 90%);
+  background-color: $accent;
 }
 
 .volbar-vert trough highlight {
-  background-color: mix($color5, $foreground, 90%);
+  background-color: $accent;
 }
 
-/* Brightness & Volume Icons */
-.brightness-icon-vert,
-.volume-icon-vert {
-  font-size: 1rem;
+/* Brightness & Volume icons share the look set at the top of this file */
+
+
+/* Resource rings: same light colour as the icons so low values still show */
+.side-bar .memorybar {
+  color: $accent;
+  background-color: $track;
 }
 
-.brightness-icon-vert {
-  color: mix($color6, $foreground, 90%);
-  padding-right: 4px;
+/* Focused window's title in the middle of the bar */
+.window-title-vert {
+  font-size: 12px;
+  color: $text-faint;
 }
 
-.volume-icon-vert {
-  color: mix($color5, $foreground, 90%);
-  padding-right: 6px;
+/* Headset battery: a ring like the others, with a small headphones icon above it so it can be told apart */
+.headset-icon-vert {
+  font-family: $font-icon;
+  font-weight: normal;
+  font-size: 11px;
+  margin-bottom: 2px;
+  color: $text-dim;
+
+  &.charging { color: $accent; }
 }
 
-/* Miscellaneous Icons */
-.wifi-icon-vert,
-.toggle-idle {
-  font-size: 1rem;
-  color: mix($color2, $foreground, 90%);
+/* Audio visualizer: eight rows, each two bars growing out from the middle */
+.visualizer-vert {
+  margin: 8px 0;
 }
 
-.wifi-vert {
-  padding: 0 5px 0 6px;
+.viz-row {
+  margin: 1px 0;
 }
 
-.toggle-idle {
-  font-size: 0.9rem;
-  padding: 0 5.5px 2px 0;
-}
+.viz-bar {
+  trough {
+    min-width: 11px;
+    min-height: 3px;
+    background-color: transparent;
+  }
 
-/* Brightness & Volume Layout */
-.brightness-vert {
-  margin: 0 4.75px;
+  progress {
+    min-height: 3px;
+    border-radius: $radius-pill;
+    background-color: $accent;
+  }
 }
-

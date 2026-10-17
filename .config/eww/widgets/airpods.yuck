@@ -1,0 +1,66 @@
+;; AirPods: battery and noise cancellation, read from LibrePods (scripts/get-airpods.sh) ;;
+(defpoll airpods :interval "3s"
+                 :initial '{"show":false,"name":"","left":-1,"right":-1,"case":-1,"mode":"","low":false,"hires":false,"has_hires":false}'
+                 "~/.config/eww/scripts/get-airpods.sh")
+
+;; The side bar's icon: there while AirPods are connected, alert colour when an earbud is low.
+;; Clicking it opens and closes the panel ;;
+(defwidget airpods-vert []
+  (eventbox :cursor "pointer"
+            :visible {airpods.show}
+    (button :class "airpods-icon-vert ${airpods.low ? 'low' : ''}"
+            :tooltip "${airpods.name} · L ${airpods.left}% · R ${airpods.right}%"
+            :onclick "${eww} open --toggle airpods-popup"
+            "󱡏")))
+
+;; One battery row: name, bar, percentage (— when unknown) ;;
+(defwidget airpods-level [name value]
+  (box :class "airpods-level" :orientation "horizontal" :space-evenly false :spacing 10
+    (label :class "airpods-level-name" :xalign 0 :text name)
+    (progress :class "airpods-level-bar ${value >= 0 && value <= 20 ? 'low' : ''}"
+              :hexpand true
+              :valign "center"
+              :value {value >= 0 ? value : 0})
+    (label :class "airpods-level-value" :xalign 1 :text {value >= 0 ? "${value}%" : "—"})))
+
+(defwidget airpods-panel []
+  (box :class "airpods-panel" :orientation "vertical" :space-evenly false :spacing 12
+    (box :orientation "horizontal" :space-evenly false
+      (label :class "airpods-title" :xalign 0 :hexpand true
+             :text {airpods.show ? airpods.name : "AirPods not connected"})
+      (eventbox :cursor "pointer"
+        (button :class "airpods-close" :onclick "${eww} close airpods-popup" "󰅖")))
+    (box :orientation "vertical" :space-evenly false :spacing 8 :visible {airpods.show}
+      (airpods-level :name "Left" :value {airpods.left})
+      (airpods-level :name "Right" :value {airpods.right})
+      (airpods-level :name "Case" :value {airpods.case}))
+    ;; Off is Transparency: AirPods Pro only accept "Off" once it's enabled on an Apple device
+    (eventbox :cursor "pointer" :visible {airpods.show}
+      (button :class "airpods-noise" :onclick "~/.config/eww/scripts/airpods-noise.sh"
+        (box :orientation "horizontal" :space-evenly false :spacing 12
+          (box :orientation "vertical" :space-evenly false :hexpand true
+            (label :class "airpods-noise-title" :xalign 0 :text "Noise cancellation")
+            (label :class "airpods-noise-sub" :xalign 0
+                   :text {airpods.mode == "anc" ? "On"
+                          : airpods.mode == "transparency" ? "Off · Transparency"
+                          : airpods.mode == "adaptive" ? "Off · Adaptive" : "Off"}))
+          (box :class "switch ${airpods.mode == 'anc' ? 'on' : ''}" :valign "center" :space-evenly false
+            (box :class "knob" :hexpand true :halign {airpods.mode == "anc" ? "end" : "start"})))))
+    ;; Only LibrePods built from PR #655 has the hi-res microphone; hidden with the packaged one
+    (eventbox :cursor "pointer" :visible {airpods.show && airpods.has_hires}
+      (button :class "airpods-noise" :onclick "~/.config/eww/scripts/airpods-hires.sh"
+        (box :orientation "horizontal" :space-evenly false :spacing 12
+          (box :orientation "vertical" :space-evenly false :hexpand true
+            (label :class "airpods-noise-title" :xalign 0 :text "Hi-res microphone")
+            (label :class "airpods-noise-sub" :xalign 0
+                   :text {airpods.hires ? "On · AirPods_HiRes_Mic, 64 kHz" : "Off"}))
+          (box :class "switch ${airpods.hires ? 'on' : ''}" :valign "center" :space-evenly false
+            (box :class "knob" :hexpand true :halign {airpods.hires ? "end" : "start"})))))))
+
+;; Opens beside the side bar, level with its device group ;;
+(defwindow airpods-popup
+  :monitor '[0]'
+  :geometry (geometry :x "10px" :y "132px" :anchor "bottom left")
+  :stacking "overlay"
+  :focusable false
+  (airpods-panel))

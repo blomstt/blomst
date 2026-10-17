@@ -1,18 +1,20 @@
 .controls {
   min-width: 240px;
-  background-color: $background;
+  background-color: $card;
+  color: $text;
   padding: 10px;
-  border-radius: 12px;
+  border-radius: $radius-lg;
 }
 
 .screenshot-control,
 .wifi-control,
 .bluetooth-control,
 .idle-control {
-  background-color: mix($background, $color1, 90%);
+  background-color: $inner;
+  color: $text;
   padding: 10px;
-  border-radius: 8px;
-  transition: background-color 0.3s ease, transform 0.2s ease;
+  border-radius: $radius-md;
+  transition: background-color 0.2s ease;
   font-size: 20px;
   min-width: 18px;
 }
@@ -20,10 +22,11 @@
 .volume-control,
 .brightness-control,
 .microphone-control {
-  background-color: mix($background, $color1, 90%);
-  padding: 4px;
-  border-radius: 8px;
-  transition: background-color 0.3s ease, transform 0.2s ease;
+  background-color: $inner;
+  color: $text;
+  padding: $space-1;
+  border-radius: $radius-md;
+  transition: background-color 0.2s ease;
   font-size: 16px;
   min-width: 16px;
 }
@@ -31,29 +34,43 @@
 .screenshot-control:hover,
 .wifi-control:hover,
 .bluetooth-control:hover,
-.idle-control:hover {
-  background-color: mix($background, $color1, 80%);
+.idle-control:hover,
+.volume-control:hover,
+.brightness-control:hover {
+  background-color: $inner-hover;
 }
 
+// The four tiles share their row evenly, so their icons need no margin to sit in the middle
 .screenshot-icon-control,
 .wifi-icon-control,
+.bluetooth-icon-control,
 .idle-icon-control {
-  margin: 0 8px;
+  margin: 0;
 }
 
+// One width for both slider icons, whatever the glyph, so the two sliders start in line
 .volume-icon-control,
 .brightness-icon-control {
-  margin: 0 8px;
+  margin: 0 $space-1;
+  min-width: 18px;
 }
 
-.bluetooth-icon-control {
-  margin: 0;
+// Icons in the Propo font take their true width, so each sits centred in its tile at full size;
+// left to fall back to the non-Propo font, wide icons spill to the right. The label inside each
+// button needs it too, or the catch-all rule in eww.scss sets it back to the text font
+.screenshot-icon-control, .screenshot-icon-control label,
+.wifi-icon-control, .wifi-icon-control label,
+.bluetooth-icon-control, .bluetooth-icon-control label,
+.idle-icon-control, .idle-icon-control label,
+.volume-icon-control,
+.brightness-icon-control, .brightness-icon-control label {
+  font-family: $font-icon-propo;
 }
 
 .brightness-control-bar trough,
 .volume-control-bar trough {
-  background-color: mix($background, $foreground, 80%);
-  border-radius: 5px;
+  background-color: $track;
+  border-radius: $radius-sm;
   min-height: 8px;
   min-width: 170px;
   margin: 6px 0;
@@ -62,6 +79,40 @@
 .brightness-control-bar trough highlight,
 .volume-control-bar trough highlight {
   min-height: 8px;
-  background-color: mix($color5, $foreground, 90%);
-  border-radius: 5px;
+  background-color: $accent;
+  border-radius: $radius-sm;
+}
+
+// States. Tiles light up while connected, dim when off, and take the alert colour when
+// something needs attention (muted sound, weak Wi-Fi). Classes come from the get-*-state.sh scripts
+.wifi-control.connected,
+.bluetooth-control.connected {
+  background-color: $accent;
+  color: $on-accent;
+}
+
+.wifi-control.connected:hover,
+.bluetooth-control.connected:hover {
+  background-color: mix($accent, $inner-hover, 85%);
+}
+
+.wifi-control.off,
+.wifi-control.disconnected,
+.bluetooth-control.off {
+  color: $text-faint;
+}
+
+.wifi-control.weak,
+.volume-control.muted {
+  background-color: mix($alert, $inner, 20%);
+  color: $alert;
+}
+
+.wifi-control.weak:hover,
+.volume-control.muted:hover {
+  background-color: mix($alert, $inner-hover, 28%);
+}
+
+.volume-control-bar.muted trough highlight {
+  background-color: $text-faint;
 }

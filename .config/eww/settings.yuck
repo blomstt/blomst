@@ -4,3 +4,5 @@
 (defvar show-mem true)
 (defvar show-disk true)
 (defvar show-music true)
+(defvar show-visualizer true)
+(defvar show-headset true)

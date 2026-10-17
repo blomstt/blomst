@@ -1,0 +1,97 @@
+/* AirPods: the side bar's icon and the panel it opens (widgets/airpods.yuck) */
+.airpods-icon-vert {
+  font-family: $bar-icon-font;
+  font-weight: normal;
+  font-size: 16px;
+  min-width: 25px;
+  min-height: 28px;
+  color: $bar-icon;
+  transition: color 0.2s ease;
+
+  &:hover { color: $bar-icon-hover; }
+  &.low { color: $alert; }
+}
+
+.airpods-panel {
+  min-width: 300px;   // fits the hi-res line, so toggling never changes the width
+  padding: $space-3 $space-4;
+  border-radius: $radius-lg;
+  background-color: $card;
+  color: $text;
+}
+
+.airpods-title {
+  font-size: 15px;
+}
+
+.airpods-close {
+  font-family: $font-icon-propo;
+  font-weight: normal;
+  font-size: 14px;
+  color: $text-faint;
+  transition: color 0.2s ease;
+
+  &:hover { color: $text; }
+}
+
+.airpods-level-name {
+  min-width: 44px;
+  color: $text-dim;
+}
+
+.airpods-level-value {
+  min-width: 38px;
+}
+
+.airpods-level-bar {
+  trough {
+    min-height: 8px;
+    border-radius: $radius-sm;
+    background-color: $track;
+  }
+
+  progress {
+    min-height: 8px;
+    border-radius: $radius-sm;
+    background-color: $accent;
+  }
+
+  &.low progress { background-color: $alert; }
+}
+
+.airpods-noise {
+  padding: $space-2 $space-3;
+  border-radius: $radius-md;
+  background-color: $inner;
+  transition: background-color 0.2s ease;
+
+  &:hover { background-color: $inner-hover; }
+}
+
+.airpods-noise-sub {
+  font-size: 12px;
+  color: $text-dim;
+}
+
+/* A small on/off switch: the knob slides right and the track lights up when on */
+.switch {
+  min-width: 38px;
+  min-height: 22px;
+  padding: 3px;
+  border-radius: $radius-pill;
+  background-color: $track;
+  transition: background-color 0.2s ease;
+
+  .knob {
+    min-width: 16px;
+    min-height: 16px;
+    border-radius: $radius-pill;
+    background-color: $text-dim;
+  }
+
+  &.on {
+    background-color: $accent;
+
+    .knob { background-color: $on-accent; }
+  }
+}

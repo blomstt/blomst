@@ -44,7 +44,7 @@
         (button :class "workspace-vert ${workspace.id > 5 ? "second" : "main"} ${workspace.visible ? "visible" : ""} ${current_workspace == workspace.id ? "current" : ""}"
                 :tooltip {workspace.id > 5 ? "Second screen ${workspace.id - 5}" : "Main screen ${workspace.id}"}
                 :onclick "hyprctl dispatch workspace ${workspace.id}"
-                "${current_workspace == workspace.id ? "" : ""}")))))
+                "${current_workspace == workspace.id ? "󰝥" : "󰄰"}")))))
 
 ;; Music Vertical ;;
 (defwidget music-vert []
@@ -88,6 +88,14 @@
           (box :class "song-cover-art-vert" :vexpand "false" :hexpand "false" :style "background-image: url('${current-music-cover}');")))))
 
 
+;; Focused window's title, shown sideways when no music is playing ;;
+(deflisten active-title :initial "" "sh ~/.config/eww/scripts/get-active-window.sh")
+(defwidget window-title-vert []
+  (box :class "window-title-vert"
+       :halign "center"
+       :visible {active-title != "" && current-music-seek == ""}
+    (label :angle 90 :limit-width 48 :truncate true :tooltip active-title :text active-title)))
+
 ;; Battery ;;
 (defwidget battery-vert []
   (eventbox :onhover "${eww} update battery=true"
@@ -108,6 +116,49 @@
         (button :class "battery-icon"
                 :tooltip time-left
                 "")))))
+
+;; Headset battery (wireless headsets that headsetcontrol knows, shown while the headset is on) ;;
+(defpoll headset :interval "30s" :run-while show-headset
+                 :initial '{"show":false,"level":0,"charging":false}'
+                 "~/.config/eww/scripts/get-headset.sh")
+(defvar headset-hover false)
+(defwidget headset-vert []
+  (eventbox :onhover "${eww} update headset-hover=true"
+            :onhoverlost "${eww} update headset-hover=false"
+            :visible {show-headset && headset.show}
+    (box  :class "memory-vert"
+          :orientation "vertical"
+          :space-evenly "false"
+          :tooltip "Headset battery: ${headset.level}%${headset.charging ? ', charging' : ''}"
+      (revealer :transition "slideup"
+                :reveal headset-hover
+                :duration "300ms"
+        (label :class "memory-label-vert" :text "${headset.level}"))
+      (label :class "headset-icon-vert ${headset.charging ? 'charging' : ''}" :text "󰋋")
+      (circular-progress :value {headset.level}
+                         :class "memorybar"
+                         :thickness 4
+        (button :class "memory-icon-vert" "")))))
+
+;; Audio visualizer: bars grow out from the middle while sound is playing ;;
+(deflisten viz :initial '{"on":false,"b":[0,0,0,0,0,0,0,0]}' "sh ~/.config/eww/scripts/get-visualizer.sh")
+(defwidget viz-row [v]
+  (box :class "viz-row" :orientation "horizontal" :space-evenly true :halign "center"
+    (progress :class "viz-bar" :orientation "horizontal" :flipped true :value v)
+    (progress :class "viz-bar" :orientation "horizontal" :value v)))
+(defwidget visualizer-vert []
+  (revealer :transition "slidedown"
+            :reveal {show-visualizer && viz.on}
+            :duration "300ms"
+    (box :class "visualizer-vert" :orientation "vertical" :space-evenly false :halign "center"
+      (viz-row :v {viz.b[0]})
+      (viz-row :v {viz.b[1]})
+      (viz-row :v {viz.b[2]})
+      (viz-row :v {viz.b[3]})
+      (viz-row :v {viz.b[4]})
+      (viz-row :v {viz.b[5]})
+      (viz-row :v {viz.b[6]})
+      (viz-row :v {viz.b[7]}))))
 
 ;; Memory ;;
 (defwidget memory-vert []
@@ -219,7 +270,7 @@
   (button :class "toggle-idle"
           :tooltip {idle ? "idle disabled" : "idle enabled" }
           :onclick "~/.config/eww/scripts/toggle-idle.sh"
-          {idle ? "" : ""  }))
+          {idle ? "󰈉" : "󰈈"}))
 
 ;;;;;; Groups ;;;;;;
 
@@ -235,6 +286,7 @@
        :hexpand "false"
        (toggle-idle)
        (wifi-vert)
+       (airpods-vert)
        (volume-vert)
        (brightness-vert))))
 
@@ -252,7 +304,8 @@
        (box :visible show-temp (resource-ring :value current-temperature :text "${current-temperature}" :tip "CPU temperature: ${current-temperature}°C" :var "temp-hover" :hovered temp-hover))
        (box :visible show-mem (memory-vert))
        (box :visible show-disk (resource-ring :value current-disk :text "${current-disk}" :tip "Disk used: ${current-disk}% (${current-disk-detail} free)" :var "disk-hover" :hovered disk-hover))
-       (battery-vert))))
+       (battery-vert)
+       (headset-vert))))
 
 ;; Time Group ;;
 (defwidget time-vert []
@@ -297,7 +350,9 @@
        :valign "center"
        :vexpand "false"
        :hexpand "false"
-       (box :visible show-music (music-vert))))
+       (box :visible show-music (music-vert))
+       (visualizer-vert)
+       (window-title-vert)))
 
 ;; Bar ;;
 (defwidget side-bar []
@@ -322,7 +377,7 @@
                       :width "0%"
                       :height "98%"
                       :anchor "left center")
-  :stacking "bg"
+  :stacking "bottom"    ; above the wallpaper layer, so a video wallpaper never covers it
   :exclusive "true"
   :focusable "false"
   (side-bar))

@@ -17,4 +17,15 @@ PageScroll {
         hint: "Song title, cover and seek bar in the middle of the bar"
         SettingSwitch { key: "show_music" }
     }
+    SettingRow {
+        title: "Audio visualizer"
+        hint: "Moving bars under the music while sound is playing"
+        SettingSwitch { key: "show_visualizer" }
+    }
+    SectionTitle { text: "Devices" }
+    SettingRow {
+        title: "Headset battery"
+        hint: "Wireless headset charge, shown while the headset is on (needs headsetcontrol)"
+        SettingSwitch { key: "show_headset" }
+    }
 }
