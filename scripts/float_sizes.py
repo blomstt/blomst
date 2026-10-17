@@ -82,9 +82,13 @@ def clients():
 
 def key_of(client):
     cls = client.get("class") or ""
-    if not cls:
+    title = client.get("initialTitle") or ""
+    # Windows without a title are menus and pop-ups (Steam's View/Friends/Games menus, file
+    # pickers). Remembering them would write a rule for the whole app that resizes every menu,
+    # and the app's clicks would then land in the wrong place. Leave them alone.
+    if not cls or not title:
         return None
-    return cls + "|" + (client.get("initialTitle") or "")
+    return cls + "|" + title
 
 
 def usable(client):
@@ -127,6 +131,8 @@ def load():
         return {}
     out = {}
     for k, v in data.items():
+        if k.endswith("|"):                               # untitled pop-ups, learned by older versions
+            continue
         try:
             if isinstance(v, list):                       # older files only had the size
                 out[k] = {"size": [int(v[0]), int(v[1])], "at": None}

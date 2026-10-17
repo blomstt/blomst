@@ -21,34 +21,34 @@ ueberzug_scale = 1
 ueberzug_offset = [0, 0, 0, 0]
 
 [opener]
+# Yazi fills in the files itself: %s is every selected file, %s1 the first one, %d1 the folder of the first.
+# It quotes them, so no quotes around them. The old shell-style "$@" and "$1" are no longer filled in.
 edit = [
   # editor
-  { run = 'nvim "$@"', block = true, for = "unix" },
-  { run = 'code "$@"', block = true, for = "unix" },
-  { run = 'code "%*"', orphan = true, for = "windows" },
+  { run = "nvim %s", desc = "nvim", block = true, for = "unix" },
+  { run = "code %s", desc = "code", orphan = true, for = "unix" },
+  { run = "code %s", desc = "code", orphan = true, for = "windows" },
 ]
 open = [
   # system app
-  { run = 'xdg-open "$@"', desc = "Open", for = "linux" },
-  { run = 'open "$@"', desc = "Open", for = "macos" },
-  { run = 'start "%1"', orphan = true, desc = "Open", for = "windows" },
+  { run = "xdg-open %s1", desc = "Open", orphan = true, for = "linux" },
+  { run = "open %s", desc = "Open", for = "macos" },
+  { run = 'start "" %s1', desc = "Open", orphan = true, for = "windows" },
 ]
 reveal = [
-  # reveal
-  { run = 'open -R "$1"', desc = "Reveal", for = "macos" },
-  { run = 'explorer /select,%1', orphan = true, desc = "Reveal", for = "windows" },
-  { run = '''exiftool "$1"; echo "Press enter to exit"; read''', block = true, desc = "Show EXIF", for = "unix" },
+  # reveal: the containing folder in the file manager
+  { run = "xdg-open %d1", desc = "Reveal", orphan = true, for = "linux" },
+  { run = "open -R %s1", desc = "Reveal", for = "macos" },
+  { run = "explorer /select,%s1", desc = "Reveal", orphan = true, for = "windows" },
 ]
 extract = [
-  # extract
-  { run = 'unar "$1"', desc = "Extract here", for = "unix" },
-  { run = 'unar "%1"', desc = "Extract here", for = "windows" },
+  # extract, with Yazi's own extractor (7z does the work)
+  { run = "ya pub extract --list %s", desc = "Extract here" },
 ]
 play = [
   # media
-  { run = 'vlc "$@"', orphan = true, for = "unix" },
-  { run = 'vlc "%1"', orphan = true, for = "windows" },
-  { run = '''mediainfo "$1"; echo "Press enter to exit"; read''', block = true, desc = "Show media info", for = "unix" },
+  { run = "mpv --force-window %s", desc = "mpv", orphan = true, for = "unix" },
+  { run = "xdg-open %s1", desc = "Play", orphan = true, for = "linux" },
 ]
 
 [open]
@@ -73,7 +73,7 @@ rules = [
   { mime = "application/x-rar", use = ["extract", "reveal"] },
   { mime = "application/xz", use = ["extract", "reveal"] },
 
-  { mime = "*", use = ["open", "reveal"] },
+  { url = "*", use = ["open", "reveal"] },
 ]
 
 [tasks]
