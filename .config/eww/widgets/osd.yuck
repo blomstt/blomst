@@ -1,0 +1,19 @@
+;; On-screen display for volume, microphone and brightness keys (see scripts/osd.sh) ;;
+(defvar osd-icon "󰕾")
+(defvar osd-value 0)
+(defvar osd-label "")
+
+(defwidget osd-widget []
+  (box :class "osd" :orientation "horizontal" :space-evenly false :spacing 14
+    (label :class "osd-icon" :text osd-icon)
+    (box :class "osd-bar" :valign "center" :hexpand true
+      (scale :class "osd-scale" :value osd-value :min 0 :max 100 :active false :hexpand true))
+    (label :class "osd-label" :xalign 1 :width 40 :text osd-label)))
+
+(defwindow osd
+  :monitor 0
+  :geometry (geometry :y "90px" :width "340px" :anchor "bottom center")
+  :stacking "overlay"
+  :exclusive false
+  :focusable false
+  (osd-widget))

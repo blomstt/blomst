@@ -1,0 +1,36 @@
+/* On-screen display for volume and brightness */
+.osd {
+  background-color: $card;
+  border: 1px solid $line;
+  border-radius: $radius-pill;
+  padding: $space-2 $space-4 $space-2 $space-3;
+}
+
+.osd-icon {
+  font-family: $font-icon;
+  font-size: 22px;
+  min-width: 28px;
+  color: $accent;
+}
+
+.osd-label {
+  color: $text;
+  font-size: 14px;
+}
+
+.osd-scale trough {
+  background-color: $track;
+  border-radius: $radius-pill;
+  min-height: 8px;
+  min-width: 180px;
+}
+
+.osd-scale trough highlight {
+  background-color: $accent;
+  border-radius: $radius-pill;
+  min-height: 8px;
+}
+
+.osd-scale slider {
+  all: unset;
+}
