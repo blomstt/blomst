@@ -35,41 +35,90 @@
 /* ---- Widget rules ----
    The colour names above are only picked up by apps built on libadwaita or the adw-gtk3
    theme. Plain GTK apps (pavucontrol, file pickers) ignore them, so paint the common
-   widgets directly. */
-window, dialog, .background, popover > contents, popover > arrow, menu {
+   widgets directly.
+   Every rule is scoped to app windows and dialogs: eww draws the bar and widgets as GTK
+   windows too, and GTK puts this file above eww's own styles. eww gives each window a class
+   named after it, so its windows are left out by name. Add new eww windows to that list. */
+window:not(.bar):not(.side-bar):not(.wallpaper):not(.device-control):not(.resource-monitor):not(.music-window):not(.custom-calendar):not(.calendar):not(.notifications):not(.notification-center):not(.osd):not(.airpods-popup),
+dialog,
+.background:not(.bar):not(.side-bar):not(.wallpaper):not(.device-control):not(.resource-monitor):not(.music-window):not(.custom-calendar):not(.calendar):not(.notifications):not(.notification-center):not(.osd):not(.airpods-popup),
+popover > contents,
+popover > arrow,
+menu {
   background-color: @window_bg_color;
   color: @window_fg_color;
 }
 
-/* eww draws the bar and widgets as GTK windows; keep them see-through so their rounded corners show.
-   One class per eww window name (eww adds it): add new eww windows here. */
-window.bar, window.side-bar, window.wallpaper, window.device-control, window.resource-monitor,
-window.music-window, window.custom-calendar, window.calendar, window.notifications,
-window.notification-center {
-  background-color: transparent;
-}
 
-headerbar, .titlebar, actionbar, toolbar {
+window:not(.bar):not(.side-bar):not(.wallpaper):not(.device-control):not(.resource-monitor):not(.music-window):not(.custom-calendar):not(.calendar):not(.notifications):not(.notification-center):not(.osd):not(.airpods-popup) headerbar,
+dialog headerbar,
+window:not(.bar):not(.side-bar):not(.wallpaper):not(.device-control):not(.resource-monitor):not(.music-window):not(.custom-calendar):not(.calendar):not(.notifications):not(.notification-center):not(.osd):not(.airpods-popup) .titlebar,
+dialog .titlebar,
+window:not(.bar):not(.side-bar):not(.wallpaper):not(.device-control):not(.resource-monitor):not(.music-window):not(.custom-calendar):not(.calendar):not(.notifications):not(.notification-center):not(.osd):not(.airpods-popup) actionbar,
+dialog actionbar,
+window:not(.bar):not(.side-bar):not(.wallpaper):not(.device-control):not(.resource-monitor):not(.music-window):not(.custom-calendar):not(.calendar):not(.notifications):not(.notification-center):not(.osd):not(.airpods-popup) toolbar,
+dialog toolbar {
   background-color: @headerbar_bg_color;
   background-image: none;
   color: @headerbar_fg_color;
   border-color: @borders;
   box-shadow: none;
 }
-label { color: inherit; }
-label:disabled, .dim-label { color: @insensitive_fg_color; }
+window:not(.bar):not(.side-bar):not(.wallpaper):not(.device-control):not(.resource-monitor):not(.music-window):not(.custom-calendar):not(.calendar):not(.notifications):not(.notification-center):not(.osd):not(.airpods-popup) label,
+dialog label { color: inherit; }
+window:not(.bar):not(.side-bar):not(.wallpaper):not(.device-control):not(.resource-monitor):not(.music-window):not(.custom-calendar):not(.calendar):not(.notifications):not(.notification-center):not(.osd):not(.airpods-popup) label:disabled,
+dialog label:disabled,
+window:not(.bar):not(.side-bar):not(.wallpaper):not(.device-control):not(.resource-monitor):not(.music-window):not(.custom-calendar):not(.calendar):not(.notifications):not(.notification-center):not(.osd):not(.airpods-popup) .dim-label,
+dialog .dim-label { color: @insensitive_fg_color; }
 
-scrolledwindow, viewport, frame, list, listview, row, treeview.view, textview, textview text,
-notebook, notebook > header, notebook > stack, stack {
+window:not(.bar):not(.side-bar):not(.wallpaper):not(.device-control):not(.resource-monitor):not(.music-window):not(.custom-calendar):not(.calendar):not(.notifications):not(.notification-center):not(.osd):not(.airpods-popup) scrolledwindow,
+dialog scrolledwindow,
+window:not(.bar):not(.side-bar):not(.wallpaper):not(.device-control):not(.resource-monitor):not(.music-window):not(.custom-calendar):not(.calendar):not(.notifications):not(.notification-center):not(.osd):not(.airpods-popup) viewport,
+dialog viewport,
+window:not(.bar):not(.side-bar):not(.wallpaper):not(.device-control):not(.resource-monitor):not(.music-window):not(.custom-calendar):not(.calendar):not(.notifications):not(.notification-center):not(.osd):not(.airpods-popup) frame,
+dialog frame,
+window:not(.bar):not(.side-bar):not(.wallpaper):not(.device-control):not(.resource-monitor):not(.music-window):not(.custom-calendar):not(.calendar):not(.notifications):not(.notification-center):not(.osd):not(.airpods-popup) list,
+dialog list,
+window:not(.bar):not(.side-bar):not(.wallpaper):not(.device-control):not(.resource-monitor):not(.music-window):not(.custom-calendar):not(.calendar):not(.notifications):not(.notification-center):not(.osd):not(.airpods-popup) listview,
+dialog listview,
+window:not(.bar):not(.side-bar):not(.wallpaper):not(.device-control):not(.resource-monitor):not(.music-window):not(.custom-calendar):not(.calendar):not(.notifications):not(.notification-center):not(.osd):not(.airpods-popup) row,
+dialog row,
+window:not(.bar):not(.side-bar):not(.wallpaper):not(.device-control):not(.resource-monitor):not(.music-window):not(.custom-calendar):not(.calendar):not(.notifications):not(.notification-center):not(.osd):not(.airpods-popup) treeview.view,
+dialog treeview.view,
+window:not(.bar):not(.side-bar):not(.wallpaper):not(.device-control):not(.resource-monitor):not(.music-window):not(.custom-calendar):not(.calendar):not(.notifications):not(.notification-center):not(.osd):not(.airpods-popup) textview,
+dialog textview,
+window:not(.bar):not(.side-bar):not(.wallpaper):not(.device-control):not(.resource-monitor):not(.music-window):not(.custom-calendar):not(.calendar):not(.notifications):not(.notification-center):not(.osd):not(.airpods-popup) textview text,
+dialog textview text,
+window:not(.bar):not(.side-bar):not(.wallpaper):not(.device-control):not(.resource-monitor):not(.music-window):not(.custom-calendar):not(.calendar):not(.notifications):not(.notification-center):not(.osd):not(.airpods-popup) notebook,
+dialog notebook,
+window:not(.bar):not(.side-bar):not(.wallpaper):not(.device-control):not(.resource-monitor):not(.music-window):not(.custom-calendar):not(.calendar):not(.notifications):not(.notification-center):not(.osd):not(.airpods-popup) notebook > header,
+dialog notebook > header,
+window:not(.bar):not(.side-bar):not(.wallpaper):not(.device-control):not(.resource-monitor):not(.music-window):not(.custom-calendar):not(.calendar):not(.notifications):not(.notification-center):not(.osd):not(.airpods-popup) notebook > stack,
+dialog notebook > stack,
+window:not(.bar):not(.side-bar):not(.wallpaper):not(.device-control):not(.resource-monitor):not(.music-window):not(.custom-calendar):not(.calendar):not(.notifications):not(.notification-center):not(.osd):not(.airpods-popup) stack,
+dialog stack {
   background-color: @view_bg_color;
   color: @view_fg_color;
   border-color: @borders;
 }
-notebook > header tab { color: @insensitive_fg_color; background-color: transparent; }
-notebook > header tab:checked { color: @window_fg_color; box-shadow: inset 0 -3px @accent_color; }
-separator { background-color: @borders; }
+window:not(.bar):not(.side-bar):not(.wallpaper):not(.device-control):not(.resource-monitor):not(.music-window):not(.custom-calendar):not(.calendar):not(.notifications):not(.notification-center):not(.osd):not(.airpods-popup) notebook > header tab,
+dialog notebook > header tab { color: @insensitive_fg_color; background-color: transparent; }
+window:not(.bar):not(.side-bar):not(.wallpaper):not(.device-control):not(.resource-monitor):not(.music-window):not(.custom-calendar):not(.calendar):not(.notifications):not(.notification-center):not(.osd):not(.airpods-popup) notebook > header tab:checked,
+dialog notebook > header tab:checked { color: @window_fg_color; box-shadow: inset 0 -3px @accent_color; }
+window:not(.bar):not(.side-bar):not(.wallpaper):not(.device-control):not(.resource-monitor):not(.music-window):not(.custom-calendar):not(.calendar):not(.notifications):not(.notification-center):not(.osd):not(.airpods-popup) separator,
+dialog separator { background-color: @borders; }
 
-button, entry, spinbutton, combobox, dropdown > button, menubutton > button {
+window:not(.bar):not(.side-bar):not(.wallpaper):not(.device-control):not(.resource-monitor):not(.music-window):not(.custom-calendar):not(.calendar):not(.notifications):not(.notification-center):not(.osd):not(.airpods-popup) button,
+dialog button,
+window:not(.bar):not(.side-bar):not(.wallpaper):not(.device-control):not(.resource-monitor):not(.music-window):not(.custom-calendar):not(.calendar):not(.notifications):not(.notification-center):not(.osd):not(.airpods-popup) entry,
+dialog entry,
+window:not(.bar):not(.side-bar):not(.wallpaper):not(.device-control):not(.resource-monitor):not(.music-window):not(.custom-calendar):not(.calendar):not(.notifications):not(.notification-center):not(.osd):not(.airpods-popup) spinbutton,
+dialog spinbutton,
+window:not(.bar):not(.side-bar):not(.wallpaper):not(.device-control):not(.resource-monitor):not(.music-window):not(.custom-calendar):not(.calendar):not(.notifications):not(.notification-center):not(.osd):not(.airpods-popup) combobox,
+dialog combobox,
+window:not(.bar):not(.side-bar):not(.wallpaper):not(.device-control):not(.resource-monitor):not(.music-window):not(.custom-calendar):not(.calendar):not(.notifications):not(.notification-center):not(.osd):not(.airpods-popup) dropdown > button,
+dialog dropdown > button,
+menubutton > button {
   background-color: @card_bg_color;
   background-image: none;
   color: @window_fg_color;
@@ -77,22 +126,54 @@ button, entry, spinbutton, combobox, dropdown > button, menubutton > button {
   box-shadow: none;
   text-shadow: none;
 }
-button:hover { background-color: shade(@card_bg_color, 1.35); }
-button:checked, button:active, button.suggested-action {
+window:not(.bar):not(.side-bar):not(.wallpaper):not(.device-control):not(.resource-monitor):not(.music-window):not(.custom-calendar):not(.calendar):not(.notifications):not(.notification-center):not(.osd):not(.airpods-popup) button:hover,
+dialog button:hover { background-color: shade(@card_bg_color, 1.35); }
+window:not(.bar):not(.side-bar):not(.wallpaper):not(.device-control):not(.resource-monitor):not(.music-window):not(.custom-calendar):not(.calendar):not(.notifications):not(.notification-center):not(.osd):not(.airpods-popup) button:checked,
+dialog button:checked,
+window:not(.bar):not(.side-bar):not(.wallpaper):not(.device-control):not(.resource-monitor):not(.music-window):not(.custom-calendar):not(.calendar):not(.notifications):not(.notification-center):not(.osd):not(.airpods-popup) button:active,
+dialog button:active,
+window:not(.bar):not(.side-bar):not(.wallpaper):not(.device-control):not(.resource-monitor):not(.music-window):not(.custom-calendar):not(.calendar):not(.notifications):not(.notification-center):not(.osd):not(.airpods-popup) button.suggested-action,
+dialog button.suggested-action {
   background-color: @accent_bg_color;
   color: @accent_fg_color;
 }
-button.destructive-action { background-color: @destructive_bg_color; color: @destructive_fg_color; }
-entry:focus-within, entry:focus { border-color: @accent_color; }
+window:not(.bar):not(.side-bar):not(.wallpaper):not(.device-control):not(.resource-monitor):not(.music-window):not(.custom-calendar):not(.calendar):not(.notifications):not(.notification-center):not(.osd):not(.airpods-popup) button.destructive-action,
+dialog button.destructive-action { background-color: @destructive_bg_color; color: @destructive_fg_color; }
+window:not(.bar):not(.side-bar):not(.wallpaper):not(.device-control):not(.resource-monitor):not(.music-window):not(.custom-calendar):not(.calendar):not(.notifications):not(.notification-center):not(.osd):not(.airpods-popup) entry:focus-within,
+dialog entry:focus-within,
+window:not(.bar):not(.side-bar):not(.wallpaper):not(.device-control):not(.resource-monitor):not(.music-window):not(.custom-calendar):not(.calendar):not(.notifications):not(.notification-center):not(.osd):not(.airpods-popup) entry:focus,
+dialog entry:focus { border-color: @accent_color; }
 
-scale trough, progressbar trough, levelbar trough { background-color: @card_bg_color; border-color: @borders; }
-scale highlight, progressbar progress, levelbar block.filled, levelbar block.low, levelbar block.high, levelbar block.full {
+window:not(.bar):not(.side-bar):not(.wallpaper):not(.device-control):not(.resource-monitor):not(.music-window):not(.custom-calendar):not(.calendar):not(.notifications):not(.notification-center):not(.osd):not(.airpods-popup) scale trough,
+dialog scale trough,
+window:not(.bar):not(.side-bar):not(.wallpaper):not(.device-control):not(.resource-monitor):not(.music-window):not(.custom-calendar):not(.calendar):not(.notifications):not(.notification-center):not(.osd):not(.airpods-popup) progressbar trough,
+dialog progressbar trough,
+window:not(.bar):not(.side-bar):not(.wallpaper):not(.device-control):not(.resource-monitor):not(.music-window):not(.custom-calendar):not(.calendar):not(.notifications):not(.notification-center):not(.osd):not(.airpods-popup) levelbar trough,
+dialog levelbar trough { background-color: @card_bg_color; border-color: @borders; }
+window:not(.bar):not(.side-bar):not(.wallpaper):not(.device-control):not(.resource-monitor):not(.music-window):not(.custom-calendar):not(.calendar):not(.notifications):not(.notification-center):not(.osd):not(.airpods-popup) scale highlight,
+dialog scale highlight,
+window:not(.bar):not(.side-bar):not(.wallpaper):not(.device-control):not(.resource-monitor):not(.music-window):not(.custom-calendar):not(.calendar):not(.notifications):not(.notification-center):not(.osd):not(.airpods-popup) progressbar progress,
+dialog progressbar progress,
+window:not(.bar):not(.side-bar):not(.wallpaper):not(.device-control):not(.resource-monitor):not(.music-window):not(.custom-calendar):not(.calendar):not(.notifications):not(.notification-center):not(.osd):not(.airpods-popup) levelbar block.filled,
+dialog levelbar block.filled,
+window:not(.bar):not(.side-bar):not(.wallpaper):not(.device-control):not(.resource-monitor):not(.music-window):not(.custom-calendar):not(.calendar):not(.notifications):not(.notification-center):not(.osd):not(.airpods-popup) levelbar block.low,
+dialog levelbar block.low,
+window:not(.bar):not(.side-bar):not(.wallpaper):not(.device-control):not(.resource-monitor):not(.music-window):not(.custom-calendar):not(.calendar):not(.notifications):not(.notification-center):not(.osd):not(.airpods-popup) levelbar block.high,
+dialog levelbar block.high,
+window:not(.bar):not(.side-bar):not(.wallpaper):not(.device-control):not(.resource-monitor):not(.music-window):not(.custom-calendar):not(.calendar):not(.notifications):not(.notification-center):not(.osd):not(.airpods-popup) levelbar block.full,
+dialog levelbar block.full {
   background-color: @accent_bg_color;
   border-color: @accent_bg_color;
 }
-levelbar block.empty { background-color: @card_bg_color; border-color: @borders; }
+window:not(.bar):not(.side-bar):not(.wallpaper):not(.device-control):not(.resource-monitor):not(.music-window):not(.custom-calendar):not(.calendar):not(.notifications):not(.notification-center):not(.osd):not(.airpods-popup) levelbar block.empty,
+dialog levelbar block.empty { background-color: @card_bg_color; border-color: @borders; }
 /* A plain round knob, replacing the theme's pointer-shaped one */
-scale slider, scale.marks-before slider, scale.marks-after slider {
+window:not(.bar):not(.side-bar):not(.wallpaper):not(.device-control):not(.resource-monitor):not(.music-window):not(.custom-calendar):not(.calendar):not(.notifications):not(.notification-center):not(.osd):not(.airpods-popup) scale slider,
+dialog scale slider,
+window:not(.bar):not(.side-bar):not(.wallpaper):not(.device-control):not(.resource-monitor):not(.music-window):not(.custom-calendar):not(.calendar):not(.notifications):not(.notification-center):not(.osd):not(.airpods-popup) scale.marks-before slider,
+dialog scale.marks-before slider,
+window:not(.bar):not(.side-bar):not(.wallpaper):not(.device-control):not(.resource-monitor):not(.music-window):not(.custom-calendar):not(.calendar):not(.notifications):not(.notification-center):not(.osd):not(.airpods-popup) scale.marks-after slider,
+dialog scale.marks-after slider {
   -gtk-icon-source: none;
   background-image: none;
   background-color: @window_fg_color;
@@ -103,17 +184,34 @@ scale slider, scale.marks-before slider, scale.marks-after slider {
   min-height: 14px;
   margin: -6px;
 }
-scale slider:hover { background-color: @accent_color; }
+window:not(.bar):not(.side-bar):not(.wallpaper):not(.device-control):not(.resource-monitor):not(.music-window):not(.custom-calendar):not(.calendar):not(.notifications):not(.notification-center):not(.osd):not(.airpods-popup) scale slider:hover,
+dialog scale slider:hover { background-color: @accent_color; }
 
-switch { background-color: @card_bg_color; border-color: @borders; }
-switch:checked { background-color: @accent_bg_color; }
-switch slider { background-color: @window_fg_color; }
-checkbutton check, checkbutton radio, check, radio {
+window:not(.bar):not(.side-bar):not(.wallpaper):not(.device-control):not(.resource-monitor):not(.music-window):not(.custom-calendar):not(.calendar):not(.notifications):not(.notification-center):not(.osd):not(.airpods-popup) switch,
+dialog switch { background-color: @card_bg_color; border-color: @borders; }
+window:not(.bar):not(.side-bar):not(.wallpaper):not(.device-control):not(.resource-monitor):not(.music-window):not(.custom-calendar):not(.calendar):not(.notifications):not(.notification-center):not(.osd):not(.airpods-popup) switch:checked,
+dialog switch:checked { background-color: @accent_bg_color; }
+window:not(.bar):not(.side-bar):not(.wallpaper):not(.device-control):not(.resource-monitor):not(.music-window):not(.custom-calendar):not(.calendar):not(.notifications):not(.notification-center):not(.osd):not(.airpods-popup) switch slider,
+dialog switch slider { background-color: @window_fg_color; }
+window:not(.bar):not(.side-bar):not(.wallpaper):not(.device-control):not(.resource-monitor):not(.music-window):not(.custom-calendar):not(.calendar):not(.notifications):not(.notification-center):not(.osd):not(.airpods-popup) checkbutton check,
+dialog checkbutton check,
+window:not(.bar):not(.side-bar):not(.wallpaper):not(.device-control):not(.resource-monitor):not(.music-window):not(.custom-calendar):not(.calendar):not(.notifications):not(.notification-center):not(.osd):not(.airpods-popup) checkbutton radio,
+dialog checkbutton radio,
+window:not(.bar):not(.side-bar):not(.wallpaper):not(.device-control):not(.resource-monitor):not(.music-window):not(.custom-calendar):not(.calendar):not(.notifications):not(.notification-center):not(.osd):not(.airpods-popup) check,
+dialog check,
+window:not(.bar):not(.side-bar):not(.wallpaper):not(.device-control):not(.resource-monitor):not(.music-window):not(.custom-calendar):not(.calendar):not(.notifications):not(.notification-center):not(.osd):not(.airpods-popup) radio,
+dialog radio {
   background-color: @card_bg_color;
   border-color: @borders;
   color: @window_fg_color;
 }
-check:checked, radio:checked { background-color: @accent_bg_color; color: @accent_fg_color; }
+window:not(.bar):not(.side-bar):not(.wallpaper):not(.device-control):not(.resource-monitor):not(.music-window):not(.custom-calendar):not(.calendar):not(.notifications):not(.notification-center):not(.osd):not(.airpods-popup) check:checked,
+dialog check:checked,
+window:not(.bar):not(.side-bar):not(.wallpaper):not(.device-control):not(.resource-monitor):not(.music-window):not(.custom-calendar):not(.calendar):not(.notifications):not(.notification-center):not(.osd):not(.airpods-popup) radio:checked,
+dialog radio:checked { background-color: @accent_bg_color; color: @accent_fg_color; }
 
-selection, row:selected, *:selected { background-color: @accent_bg_color; color: @accent_fg_color; }
-tooltip, tooltip.background { background-color: @popover_bg_color; color: @popover_fg_color; }
+selection,
+row:selected,
+*:selected { background-color: @accent_bg_color; color: @accent_fg_color; }
+tooltip,
+tooltip.background { background-color: @popover_bg_color; color: @popover_fg_color; }

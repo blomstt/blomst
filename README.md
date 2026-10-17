@@ -31,6 +31,10 @@ window.
 | Super + H | Widget popups and notification center |
 | Super + Shift + W | Wallpaper picker |
 | Ctrl + Shift + Esc | Task manager: end apps and processes, like on Windows |
+| Super + C | Clipboard history |
+| Super + Shift + C | Colour picker: click anywhere to copy its colour |
+| Super + Ctrl + Print | Screenshot you can draw on before saving |
+| Volume and brightness keys | Change it and show a small pop-up |
 | Super + 1 to 5 | Workspace 1 to 5 on the screen the mouse is on |
 | Super + Shift + 1 to 5 | Send the focused window to that workspace |
 | Super + 6 to 0 | Second screen's workspaces 1 to 5, from anywhere |
@@ -42,6 +46,31 @@ center under the calendar, where past notifications can be read, dismissed one b
 Pop-ups hide while it is open, and the history survives restarts (`~/.cache/eww/notification-history.json`).
 Do not disturb, how long pop-ups stay and how much history is kept are on the Notifications page of
 the settings window.
+
+## Colours everywhere
+
+One wallpaper sets the colours of the bar and widgets, Hyprland's borders, the app launcher,
+kitty, GTK and Qt apps, btop, yazi, Code - OSS, the lock screen and the login screen. Firefox and
+Discord follow too once their add-ons are set up (below). All colours come from
+`.config/matugen/templates/`, and the eww widgets take theirs, plus corner sizes and spacing,
+from `.config/eww/scss/tokens.scss`.
+
+### One-time setup for the login screen, Firefox and Discord
+
+These need a password or a browser, so they are not done by `INSTALL.sh`.
+
+- **Login screen**: lets the login screen read the wallpaper and colours (it cannot see your home
+  folder), then picks the Blomst theme. The theme then follows every wallpaper change.
+  ```bash
+  sudo install -d -o "$USER" -g "$USER" -m 755 /var/lib/blomst-sddm
+  ~/scripts/sddm_sync.sh
+  sudo ln -sfn /var/lib/blomst-sddm/theme /usr/share/sddm/themes/blomst
+  sudo mkdir -p /etc/sddm.conf.d && printf '[Theme]\nCurrent=blomst\n' | sudo tee /etc/sddm.conf.d/theme.conf
+  ```
+- **Firefox**: install `pipx`, then `pipx install pywalfox && pywalfox install`, add the Pywalfox
+  extension from addons.mozilla.org and press *Fetch Pywal colors* once.
+- **Discord**: install Vencord with its official installer, then turn on the *Blomst* theme under
+  Settings > Vencord > Themes.
 
 ## What you need
 
@@ -91,6 +120,12 @@ No particular apps are required. Some things simply light up if you have them:
 
 - **Music widget**: shows whatever any MPRIS player is playing (via `playerctl`).
 - **Code - OSS**: gets the wallpaper palette if it is installed; skipped otherwise.
+- **cava, headsetcontrol, LibrePods**: an audio visualizer, wireless headset battery, and AirPods
+  battery, noise control and hi-res mic in the side bar. Each one stays hidden until its program is
+  installed (and, for LibrePods, running).
+- **awww (formerly swww), cliphist, satty, hyprpicker**: animated wallpaper changes, clipboard history,
+  drawing on screenshots and the colour picker. Each key tells you what to install if it is missing:
+  `sudo pacman -S awww cliphist satty hyprpicker`
 - **GTK apps**: follow the palette; older GTK 3 apps need `adw-gtk-theme` for full effect.
 - **Night light**: install `hyprsunset` and it appears on the Displays page of the settings window.
 

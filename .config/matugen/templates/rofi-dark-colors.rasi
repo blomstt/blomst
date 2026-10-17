@@ -1,9 +1,9 @@
 * {
-    active-background: {{base16.base03.default.hex}};
+    active-background: {{colors.secondary_container.default.hex}};
     active-foreground: @foreground;
     normal-background: @background;
     normal-foreground: @foreground;
-    urgent-background: {{base16.base00.default.hex}};
+    urgent-background: {{colors.error_container.default.hex}};
     urgent-foreground: @foreground;
 
     alternate-active-background: @background;
@@ -13,16 +13,16 @@
     alternate-urgent-background: @background;
     alternate-urgent-foreground: @foreground;
 
-    selected-active-background: {{base16.base00.default.hex}};
-    selected-active-foreground: @foreground;
-    selected-normal-background: {{base16.base03.default.hex}};
-    selected-normal-foreground: @foreground;
-    selected-urgent-background: {{base16.base02.default.hex}};
+    selected-active-background: {{colors.primary_container.default.hex}};
+    selected-active-foreground: {{colors.on_primary_container.default.hex}};
+    selected-normal-background: {{colors.primary_container.default.hex}};
+    selected-normal-foreground: {{colors.on_primary_container.default.hex}};
+    selected-urgent-background: {{colors.error_container.default.hex}};
     selected-urgent-foreground: @foreground;
 
     background-color: @background;
-    background: {{base16.base00.default.hex}};
-    foreground: {{base16.base05.default.hex}};
+    background: {{colors.surface.default.hex}};
+    foreground: {{colors.on_surface.default.hex}};
     border-color: @background;
     spacing: 2;
 }

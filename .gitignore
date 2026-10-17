@@ -49,3 +49,6 @@ wallpapers/*
 
 # Remembered floating size for kitty (per machine)
 .config/kitty/float-size.conf
+
+# Qt colours generated from the wallpaper
+.config/qt6ct/colors/

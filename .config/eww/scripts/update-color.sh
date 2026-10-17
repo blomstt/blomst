@@ -39,6 +39,13 @@ if [ -f "$HOME/.config/matugen/local.toml" ]; then
     run_if_exists matugen -c "$HOME/.config/matugen/local.toml" --source-color-index 0 -m dark image "$WP_PATH"
 fi
 
+# Firefox follows the wallpaper through the Pywalfox extension (when installed)
+PYWALFOX=$(command -v pywalfox || echo "$HOME/.local/bin/pywalfox")    # pipx puts it in ~/.local/bin
+[ -x "$PYWALFOX" ] && "$PYWALFOX" update >/dev/null 2>&1 &
+
+# Login screen follows the wallpaper too (no-op until /var/lib/blomst-sddm exists)
+[ -x "$HOME/scripts/sddm_sync.sh" ] && "$HOME/scripts/sddm_sync.sh" "$WP_PATH"
+
 # Push the new palette into Code - OSS
 [ -f "$HOME/scripts/vscode_colors.py" ] && python3 "$HOME/scripts/vscode_colors.py"
 
@@ -47,10 +54,22 @@ if [[ "$RELOAD_APPS" == "--generate-only" || "$RELOAD_APPS" == "-g" ]]; then
     exit 0
 fi
 
-if command -v hyprpaper >/dev/null 2>&1; then
+# A playing video wallpaper stops first, so the change animates from its still picture
+[ -x "$HOME/scripts/video_wallpaper.sh" ] && "$HOME/scripts/video_wallpaper.sh" --stop
+
+# awww (formerly swww) when it is running: animated change, the new wallpaper grows out from the middle
+WW=""
+for w in awww swww; do command -v "$w" >/dev/null 2>&1 && "$w" query >/dev/null 2>&1 && WW=$w && break; done
+if [ -n "$WW" ]; then
+    "$WW" img "$WP_PATH" --transition-type grow --transition-pos 0.5,0.5 \
+        --transition-duration 1.2 --transition-fps 144 &
+elif command -v hyprpaper >/dev/null 2>&1; then
     safe_kill hyprpaper
     hyprpaper -c "$HOME/.config/hypr/service/hyprpaper.conf" &
 fi
+
+# A video with the same name as the picture plays on top once the change has finished
+[ -x "$HOME/scripts/video_wallpaper.sh" ] && (sleep 1.3; "$HOME/scripts/video_wallpaper.sh" "$WP_PATH") &
 
 if pgrep -x "eww" >/dev/null; then
     killall eww

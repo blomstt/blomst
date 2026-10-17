@@ -93,7 +93,8 @@ ANIM_SPEEDS = {"fast": 0.6, "normal": 1.0, "slow": 1.6}
 WS_STYLES = {"vertical": "slidefadevert 20%", "horizontal": "slidefade 20%", "fade": "fade"}
 IDLE_KEYS = {"idle_lock_min": "lock-session", "idle_suspend_min": "systemctl suspend"}
 BAR_KEYS = {"show_cpu": "show-cpu", "show_temp": "show-temp", "show_mem": "show-mem",
-            "show_disk": "show-disk", "show_music": "show-music"}
+            "show_disk": "show-disk", "show_music": "show-music",
+            "show_visualizer": "show-visualizer", "show_headset": "show-headset"}
 
 # What a preset remembers (looks only; idle timings and bar contents are left alone).
 ALL_KEYS = list(HYPR_KEYS) + ["border_spin", "terminal_opacity", "anim_speed", "ws_anim"]
@@ -115,6 +116,7 @@ DEFAULTS = {
     "notif_popups": True, "notif_popup_seconds": 10, "notif_history_limit": 50,
     "notif_in_stack": True, "notif_hide_with_stack": True,
     "show_cpu": True, "show_temp": True, "show_mem": True, "show_disk": True, "show_music": True,
+    "show_visualizer": True, "show_headset": True,
 }
 
 _BLOCK_OPEN = re.compile(r"^\s*([\w.:-]+)\s*\{\s*(#.*)?$")
@@ -825,10 +827,11 @@ def mix(a, b, t):
 
 def read_palette():
     raw = dict(re.findall(r"\$([\w-]+)\s*:\s*(#[0-9a-fA-F]{6})", _read(COLORS)))
-    bg = raw.get("background", "#0a0a0a")
-    light = raw.get("color7", "#c8c8c8")
-    mid = raw.get("color5", "#8e8e8e")
-    accent = raw.get("color6", light)
+    # Material colours when the template provides them (same accent as the bar), else base16
+    bg = raw.get("surface", raw.get("background", "#0a0a0a"))
+    light = raw.get("on_surface", raw.get("color7", "#c8c8c8"))
+    mid = raw.get("on_surface_variant", raw.get("color5", "#8e8e8e"))
+    accent = raw.get("primary", raw.get("color6", light))
     return {
         "bg": bg,
         "window": "#e0" + mix(bg, mid, 0.06)[1:],     # #AARRGGBB, slightly see-through
@@ -838,8 +841,8 @@ def read_palette():
         "surface3": mix(bg, mid, 0.38),
         "text": mix(light, "#ffffff", 0.45),
         "subtext": mix(mid, "#ffffff", 0.15),
-        "accent": mix(accent, "#ffffff", 0.25),
-        "accentText": mix(bg, "#000000", 0.3),
+        "accent": accent if "primary" in raw else mix(accent, "#ffffff", 0.25),
+        "accentText": raw.get("on_primary", mix(bg, "#000000", 0.3)),
     }
 
 
@@ -859,10 +862,11 @@ def list_wallpapers():
 
 NORMALIZE_SCRIPT = os.path.join(HOME, "scripts/normalize_wallpaper.sh")
 _IMAGE_TYPES = (".jpg", ".jpeg", ".png", ".webp")
+_VIDEO_TYPES = (".mp4", ".webm", ".mkv", ".mov")    # video wallpapers, see scripts/video_wallpaper.sh
 
 
 def unprepared_wallpapers():
-    """Pictures dropped into ~/wallpapers that have no preview yet (so are not listed)."""
+    """Pictures and videos dropped into ~/wallpapers that have no preview yet (so are not listed)."""
     try:
         names = os.listdir(WALLPAPERS)
     except OSError:
@@ -871,13 +875,13 @@ def unprepared_wallpapers():
     out = []
     for n in names:
         base, ext = os.path.splitext(n)
-        if ext.lower() in _IMAGE_TYPES and not base.startswith("preview-") and "preview-%s.jpg" % base not in have:
+        if ext.lower() in _IMAGE_TYPES + _VIDEO_TYPES and not base.startswith("preview-") and "preview-%s.jpg" % base not in have:
             out.append(base)
     return sorted(set(out))
 
 
 def prepare_wallpapers():
-    """Convert new pictures to jpg and make their previews, in the background."""
+    """Convert new pictures to jpg (and take a still from new videos) and make their previews, in the background."""
     if not os.path.isfile(NORMALIZE_SCRIPT):
         return False
     subprocess.Popen(["bash", NORMALIZE_SCRIPT], start_new_session=True,
