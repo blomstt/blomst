@@ -157,11 +157,11 @@
   color: transparent;
 }
 
-tooltip.background{
-  color: $foreground;
-  background-color: $background;
-  border-radius: 8px;
-
+tooltip.background {
+  color: $text;
+  background-color: $inner;
+  border: 1px solid $line;
+  border-radius: $radius-md;
 }
 
 .powermenu{

@@ -1,4 +1,5 @@
 @import "colors.scss";
+@import "scss/tokens.scss";
 
 *{
   all: unset;
@@ -8,9 +9,11 @@
 
 @import "scss/bar.scss";
 @import "scss/side-bar.scss";
+@import "scss/airpods.scss";
 @import "scss/wallpaper.scss";
 @import "scss/device-control.scss";
 @import "scss/resource-monitor.scss";
 @import "scss/notification.scss";
 @import "scss/custom-calendar.scss";
 @import "scss/music-control.scss";
+@import "scss/osd.scss";

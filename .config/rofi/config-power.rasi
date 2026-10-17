@@ -81,11 +81,11 @@ element alternate.normal {
 }
 
 element selected.active {
-    text-color: @background;
+    text-color: @selected-active-foreground;
 }
 
 element selected.normal {
-    text-color: @background;
+    text-color: @selected-normal-foreground;
 }
 
 message {

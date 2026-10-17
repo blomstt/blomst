@@ -5,14 +5,14 @@ muted=$(pactl get-sink-mute "$sink" | awk '{print $2}')
 volume=$(pactl get-sink-volume "$sink" | awk '/Volume: front-left/ { gsub(/%/, "", $5); print $5; exit }')
 
 if [[ "$muted" == "yes" ]]; then
-  echo ""
+  echo "󰝟"
 else
   if (( volume > 50 )); then
-    echo ""
+    echo "󰕾"
   elif (( volume > 0 )); then
-    echo ""
+    echo "󰖀"
   else
-    echo ""
+    echo "󰕿"
   fi
 fi
 

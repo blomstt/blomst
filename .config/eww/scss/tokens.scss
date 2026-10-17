@@ -1,0 +1,32 @@
+// Design tokens: every widget takes its colours, corners and spacing from here,
+// so the bar, widgets, pop-ups and calendar all match. Colours follow the wallpaper.
+
+// ---- Colours (by role) ----
+$card: $surface;                          // panels: bar, widgets, pop-ups
+$inner: $surface_container_high;          // things inside a panel: groups, buttons
+$inner-hover: $surface_container_highest;
+$track: $surface_container_highest;       // empty part of sliders and bars
+$text: $on_surface;                       // main text and icons
+$text-dim: $on_surface_variant;           // secondary text
+$text-faint: $outline;                    // hints, other weekdays
+$accent: $primary;                        // what is active or filled
+$alert: $error;                           // needs attention: muted, weak signal
+$on-accent: $on_primary;
+$line: $outline_variant;
+
+// ---- Corners: one scale, matching Hyprland's window rounding (14) ----
+$radius-lg: 14px;     // panels
+$radius-md: 10px;     // groups and buttons inside a panel
+$radius-sm: 6px;      // chips, covers, slider tracks
+$radius-pill: 999px;
+
+// ---- Spacing ----
+$space-1: 4px;
+$space-2: 8px;
+$space-3: 12px;
+$space-4: 16px;
+
+// ---- Fonts ----
+$font-text: "Iosevka";
+$font-icon: "Hurmit Nerd Font Mono";     // Iosevka has no icons
+$font-icon-propo: "Hurmit Nerd Font Propo"; // icons at full size and true width, for icon-only tiles

@@ -2,14 +2,15 @@
   background-color: transparent;
 }
 
+/* Pop-ups */
 .notif {
   min-width: 300px;
-  background-color: $background;
-  color: $foreground;
-  border: 1px solid mix($background, $color1, 60%);
+  background-color: $card;
+  color: $text-dim;
+  border: 1px solid $line;
   margin-bottom: 10px;
-  padding: 12px;
-  border-radius: 12px;
+  padding: $space-3;
+  border-radius: $radius-lg;
 }
 
 .notif-icon {
@@ -18,71 +19,72 @@
 }
 
 .notif-summary {
-  color: $color7;
+  color: $text;
   font-size: 0.95rem;
 }
 
 .notif-body {
-  color: $foreground;
+  color: $text-dim;
   font-size: 0.85rem;
   font-weight: normal;
   margin-top: 2px;
 }
 
 .notif-icon-fallback {
-  font-family: "Font Awesome 6 Free";
+  font-family: $font-icon;
   font-size: 1.4rem;
-  color: $color7;
+  color: $accent;
 }
 
 /* Notification center (Super+H) */
 .nc {
-  background-color: $background;
-  color: $foreground;
+  background-color: $card;
+  color: $text-dim;
   padding: 10px;
-  border-radius: 12px;
+  border-radius: $radius-lg;
 }
 
 .nc-header {
-  padding: 2px 4px 10px 4px;
+  padding: 2px $space-1 10px $space-1;
 }
 
 .nc-title {
-  color: $color7;
+  color: $text;
 }
 
 .nc-clear {
   font-size: 0.8rem;
   padding: 3px 10px;
-  border-radius: 8px;
-  background-color: mix($background, $color1, 90%);
+  border-radius: $radius-md;
+  color: $text-dim;
+  background-color: $inner;
   transition: background-color 0.2s ease;
-  &:hover { background-color: mix($background, $color2, 60%); color: $color7; }
+  &:hover { background-color: $inner-hover; color: $text; }
 }
 
 .nc-item {
-  background-color: mix($background, $color1, 90%);
+  background-color: $inner;
   padding: 10px;
-  margin-bottom: 8px;
-  border-radius: 8px;
+  margin-bottom: $space-2;
+  border-radius: $radius-md;
 }
 
 .nc-meta {
   font-size: 0.7rem;
   font-weight: normal;
-  color: $color3;
+  color: $text-faint;
 }
 
 .nc-dismiss {
-  font-family: "Font Awesome 6 Free";
+  font-family: $font-icon;
   font-size: 0.75rem;
-  color: $color3;
+  color: $text-faint;
   padding: 0 2px;
-  &:hover { color: $color7; }
+  &:hover { color: $text; }
 }
 
 .nc-empty {
-  color: $color3;
+  color: $text-faint;
   font-weight: normal;
 }
 

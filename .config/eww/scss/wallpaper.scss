@@ -1,20 +1,20 @@
-.window{
-  background-color: $background;
-  padding: 8px;
-  border-radius: 12px;
+.window {
+  background-color: $card;
+  padding: $space-2;
+  border-radius: $radius-lg;
 }
 
 .preview {
-  background-size: cover;  
+  background-size: cover;
   background-position: center;
-  border-radius: 4px;
-  margin: 4px;
+  border-radius: $radius-sm;
+  margin: $space-1;
 }
 
 .image-list-preview {
-  padding: 4px;
-  margin: 4px;
-  background-size: cover;  
+  padding: $space-1;
+  margin: $space-1;
+  background-size: cover;
   background-position: center;
-  border-radius: 4px;
+  border-radius: $radius-sm;
 }

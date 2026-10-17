@@ -1,8 +1,9 @@
 .resources {
   min-width: 245px;
-  background-color: $background;
-  padding: 8px;
-  border-radius: 12px;
+  background-color: $card;
+  color: $text;
+  padding: $space-2;
+  border-radius: $radius-lg;
 }
 
 .memory-bar trough,
@@ -10,39 +11,21 @@
 .storage-bar trough,
 .battery-bar trough,
 .cpu-bar trough {
-  background-color: mix($background, $foreground, 70%);
-  border-radius: 8px;
+  background-color: $track;
+  border-radius: $radius-md;
   min-width: 32px;
   min-height: 100px;
-  margin: 8px;
+  margin: $space-2;
 }
 
-.memory-bar trough progress {
-  background: linear-gradient(to right, $color6, lighten($color6, 20%));
-}
-
-.storage-bar trough progress {
-  background-color: mix($color3, $foreground, 85%);
-}
-
-.battery-bar trough progress {
-  background-color: mix($color5, $foreground, 100%);
-}
-
-.cpu-bar trough progress {
-  background-color: mix($color4, $foreground, 100%);
-}
-
-.temperature-bar trough progress {
-  background-color: mix($color7, $foreground, 100%);
-}
-
+// One accent for every bar, so none looks like a warning when it is not
 .memory-bar trough progress,
 .temperature-bar trough progress,
 .storage-bar trough progress,
 .battery-bar trough progress,
 .cpu-bar trough progress {
+  background-color: $accent;
   min-width: 32px;
   min-height: 6px;
-  border-radius: 6px;
+  border-radius: $radius-md;
 }

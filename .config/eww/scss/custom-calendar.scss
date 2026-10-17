@@ -1,19 +1,19 @@
 .calendar-container {
   min-width: 230px;
-  padding: 8px;
-  border-radius: 12px;
-  background-color: $background;
-  color: $foreground;
+  padding: $space-2;
+  border-radius: $radius-lg;
+  background-color: $card;
+  color: $text-dim;
 }
 
 .calendar-title {
   font-size: 20px;
   font-weight: bold;
-  color: $color1;
+  color: $text;
 }
 
 .weekdays .label {
-  color: $color3;
+  color: $text-faint;
 }
 
 .calendar-grid .day {
@@ -23,9 +23,9 @@
 }
 
 .calendar-grid .today {
-  color: $background;
-  background-color: $color2;
-  border-radius: 6px;
+  color: $on-accent;
+  background-color: $accent;
+  border-radius: $radius-sm;
   font-weight: bold;
   padding: 2px;
 }
