@@ -1,0 +1,19 @@
+/* Nattsang's colours, from the wallpaper (matugen). Nattsang reads this
+   file again whenever it changes, so the window follows the wallpaper.
+   The background, the body text and the greys come from base16; the accents
+   are the wallpaper's own Material colours (primary, tertiary, secondary),
+   so they change with each wallpaper. The panel greys are base16's tint at
+   the design's own lightness. */
+@define-color background {{base16.base00.default.hex}};
+@define-color text       {{base16.base05.default.hex}};
+@define-color bright     {{base16.base06.default.hex}};
+@define-color accent     {{colors.primary.default.hex}};
+@define-color playing    {{colors.tertiary.default.hex}};
+@define-color label      {{colors.secondary.default.hex}};
+@define-color border     {{base16.base02.default.hex | set_lightness: 21.0}};
+@define-color raised     {{base16.base01.default.hex | set_lightness: 10.0}};
+@define-color hover      {{base16.base01.default.hex | set_lightness: 8.0}};
+@define-color groove     {{base16.base02.default.hex | set_lightness: 16.0}};
+@define-color dim        {{base16.base04.default.hex}};
+@define-color handle     {{base16.base03.default.hex}};
+@define-color muted      {{base16.base03.default.hex | set_lightness: 29.0}};

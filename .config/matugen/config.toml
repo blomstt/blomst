@@ -22,6 +22,11 @@ output_path = '~/.config/eww/colors.scss'
 input_path = '~/.config/matugen/templates/kitty-colors.conf'
 output_path = '~/.config/kitty/kitty-colors.conf'
 
+# Nattsang (the music player) reads its colours from here, live
+[templates.nattsang]
+input_path = '~/.config/matugen/templates/nattsang-colors.css'
+output_path = '~/.config/nattsang/colors.css'
+
 [templates.lush]
 input_path = '~/.config/matugen/templates/lush-colors.json'
 output_path = '~/.config/nvim/colors/lush-colors.json'
