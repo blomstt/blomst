@@ -24,7 +24,7 @@ case "$CHOICE" in
   "")
     cd /$HOME
     sleep 1
-    hyprctl dispatch exit
+    hyprctl dispatch 'hl.dsp.exit()'
   ;;
   *) 
     exit 1

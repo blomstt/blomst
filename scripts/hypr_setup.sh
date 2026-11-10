@@ -4,38 +4,38 @@
 USER_DIR="$HOME/.config/hypr/user"
 SERVICE_DIR="$HOME/.config/hypr/service"
 TEMPLATE_DIR="$HOME/.config/hypr/template"
-MONITORS_CONF="$USER_DIR/monitors.conf"
+MONITORS_LUA="$USER_DIR/monitors.lua"
 
 mkdir -p "$USER_DIR"
 mkdir -p "$SERVICE_DIR"
 
 
-echo "# Auto-generated Config" > "$MONITORS_CONF"
+echo "-- Auto-generated Config" > "$MONITORS_LUA"
 
 MONITOR_DATA=$(hyprctl monitors | awk '/^Monitor/{n=$2} $2=="at"{print n, $1, $3}')
 
 echo "$MONITOR_DATA" | while read -r NAME RES POS; do
     if [ -z "$NAME" ]; then continue; fi
-    echo "monitor = $NAME, $RES, $POS, 1" >> "$MONITORS_CONF"
+    echo "hl.monitor({ output = \"$NAME\", mode = \"$RES\", position = \"$POS\", scale = 1 })" >> "$MONITORS_LUA"
 done
 
-echo -e "\n# Workspace Mapping" >> "$MONITORS_CONF"
+echo -e "\n-- Workspace Mapping" >> "$MONITORS_LUA"
 COUNT=0
 echo "$MONITOR_DATA" | while read -r NAME RES POS; do
     if [ -z "$NAME" ]; then continue; fi
     if [ $COUNT -eq 0 ]; then
-        for i in {1..5}; do echo "workspace = $i, monitor:$NAME" >> "$MONITORS_CONF"; done
+        for i in {1..5}; do echo "hl.workspace_rule({ workspace = \"$i\", monitor = \"$NAME\" })" >> "$MONITORS_LUA"; done
     else
-        for i in {6..10}; do echo "workspace = $i, monitor:$NAME" >> "$MONITORS_CONF"; done
+        for i in {6..10}; do echo "hl.workspace_rule({ workspace = \"$i\", monitor = \"$NAME\" })" >> "$MONITORS_LUA"; done
     fi
     ((COUNT++))
 done
 
-echo "monitors.conf generated."
+echo "monitors.lua generated."
 
 echo "checking other config files..."
 
-FILES=("apps.conf" "colors.conf" "env.conf" "execs.conf" "inputs.conf" "app-rules.conf" "float-sizes.conf")
+FILES=("apps.lua" "colors.lua" "env.lua" "execs.lua" "inputs.lua" "app-rules.lua" "float-sizes.lua")
 
 for FILE in "${FILES[@]}"; do
     TARGET_FILE="$USER_DIR/$FILE"

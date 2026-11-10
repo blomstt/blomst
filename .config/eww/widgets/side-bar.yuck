@@ -31,7 +31,7 @@
                   :onclick "systemctl suspend" "")
           (button :class "exit"
                   :tooltip "exit Hyprland"
-                  :onclick "hyprctl dispatch exit" ""))))))
+                  :onclick "hyprctl dispatch 'hl.dsp.exit()'" ""))))))
 
 ;; Workspaces ;;
 (defwidget workspaces-vert []
@@ -43,7 +43,7 @@
       (for workspace in workspaces
         (button :class "workspace-vert ${workspace.id > 5 ? "second" : "main"} ${workspace.visible ? "visible" : ""} ${current_workspace == workspace.id ? "current" : ""}"
                 :tooltip {workspace.id > 5 ? "Second screen ${workspace.id - 5}" : "Main screen ${workspace.id}"}
-                :onclick "hyprctl dispatch workspace ${workspace.id}"
+                :onclick "hyprctl dispatch 'hl.dsp.focus({ workspace = ${workspace.id} })'"
                 "${current_workspace == workspace.id ? "󰝥" : "󰄰"}")))))
 
 ;; Music Vertical ;;

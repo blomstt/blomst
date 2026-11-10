@@ -7,7 +7,7 @@ if [ -z "$MIXER_DETACHED" ]; then
 fi
 
 if pgrep -x pavucontrol >/dev/null; then
-    hyprctl dispatch focuswindow "class:^(org\.pulseaudio\.pavucontrol|pavucontrol)$"
+    hyprctl dispatch 'hl.dsp.focus({ window = [[class:^(org\.pulseaudio\.pavucontrol|pavucontrol)$]] })'
 else
-    hyprctl dispatch exec "[float; size 525 260] pavucontrol"
+    hyprctl dispatch 'hl.dsp.exec_cmd("pavucontrol", { float = true, size = { 525, 260 } })'
 fi

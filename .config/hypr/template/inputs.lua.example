@@ -1,0 +1,27 @@
+-- Input
+hl.config({
+    input = {
+        kb_layout = "us",
+        kb_variant = "", -- colemak is another option
+        kb_model = "",
+        kb_options = "",
+        kb_rules = "",
+
+        follow_mouse = 1,
+
+        sensitivity = 0.45, -- -1.0 - 1.0, 0 means no modification.
+        accel_profile = "flat",
+
+        touchpad = {
+            natural_scroll = true,
+        },
+    },
+})
+
+
+-- Example per-device config
+-- See https://wiki.hypr.land/configuring/core/binds/devices/per-device/ for more
+hl.device({
+    name = "epic-mouse-v1",
+    sensitivity = -0.5,
+})

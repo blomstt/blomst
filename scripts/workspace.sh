@@ -9,6 +9,6 @@ n=$2
 mon=$(hyprctl monitors -j | jq -r '.[] | select(.focused) | .name')
 [ "$mon" = "$SECOND" ] && n=$((n + 5))
 case "$1" in
-  go)   hyprctl dispatch workspace "$n" ;;
-  move) hyprctl dispatch movetoworkspace "$n" ;;
+  go)   hyprctl dispatch "hl.dsp.focus({ workspace = $n })" ;;
+  move) hyprctl dispatch "hl.dsp.window.move({ workspace = $n, follow = true })" ;;
 esac

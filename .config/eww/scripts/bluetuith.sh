@@ -1,3 +1,3 @@
 #!/bin/bash
-hyprctl dispatch exec "[float; size 525 260] kitty --class bluetuith bluetuith"
+hyprctl dispatch 'hl.dsp.exec_cmd("kitty --class bluetuith bluetuith", { float = true, size = { 525, 260 } })'
 

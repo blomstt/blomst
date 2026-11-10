@@ -97,7 +97,7 @@
          :hexpand true
       (for workspace in workspaces
         (button :class "workspace ${current_workspace == workspace.id ? "current" : ""}"
-                :onclick "hyprctl dispatch workspace ${workspace.id}"
+                :onclick "hyprctl dispatch 'hl.dsp.focus({ workspace = ${workspace.id} })'"
                 "${current_workspace == workspace.id ? "" : ""}")))))
 
 ;; Wifi ;;

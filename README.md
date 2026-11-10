@@ -19,7 +19,7 @@ window.
 | ![Fonts page](docs/screenshots/settings-fonts.png) | ![Displays page](docs/screenshots/settings-displays.png) |
 | **Fonts**: one font for the bar, menus and lock screen, another for the terminal | **Displays**: resolution, refresh rate and scale, tried for 15 seconds before they stick |
 | ![Keybinds page](docs/screenshots/settings-keybinds.png) | ![App launcher](docs/screenshots/launcher.png) |
-| **Keybinds**: every shortcut, named by its comment in `keybinds.conf` | **App launcher** (Super + Space) with an icon for every app |
+| **Keybinds**: every shortcut, grouped by its comment in `keybinds.lua` | **App launcher** (Super + Space) with an icon for every app |
 | ![Notification pop-ups](docs/screenshots/notifications.png) | |
 | **Notifications** in the wallpaper colours; past ones are kept in the notification center | |
 
@@ -74,7 +74,7 @@ These need a password or a browser, so they are not done by `INSTALL.sh`.
 
 ## What you need
 
-Arch Linux with Hyprland and kitty.
+Arch Linux with Hyprland 0.57 or newer (the config is Lua) and kitty.
 
 ### What `INSTALL.sh` installs
 

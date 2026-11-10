@@ -492,7 +492,7 @@ def focus_running_window(window_class=WINDOW_CLASS):
     try:
         out = subprocess.run(["hyprctl", "clients", "-j"], capture_output=True, text=True, timeout=2).stdout
         if any(c.get("class") == window_class for c in json.loads(out)):
-            subprocess.run(["hyprctl", "dispatch", "focuswindow", "class:^(%s)$" % window_class],
+            subprocess.run(["hyprctl", "dispatch", "hl.dsp.focus({ window = %s })" % json.dumps("class:^(%s)$" % window_class)],
                            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=2)
             return True
     except (OSError, ValueError, subprocess.SubprocessError):

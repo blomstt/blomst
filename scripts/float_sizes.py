@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Remembers the size and position you give floating windows and re-applies them next time.
 
-Sizes are also written out as Hyprland window rules (hypr/user/float-sizes.conf), so a
+Sizes are also written out as Hyprland window rules (hypr/user/float-sizes.lua), so a
 window can be created at its size straight away; anything that still opens differently
 is resized and moved after it appears.
 
@@ -9,7 +9,7 @@ Windows are remembered per app and per kind of window (window class + the title 
 window opens with), so an app's main window and its dialogs don't overwrite each other.
 Saved in ~/.config/blomst-settings/float-sizes.json. What gets restored (size, position)
 is switched in the settings window and kept in float-options.json.
-Started by Hyprland (exec-once).
+Started by Hyprland at login (core/execs.lua).
 """
 import fcntl
 import json
@@ -27,7 +27,7 @@ EVENTS = os.path.join(RUNTIME, "hypr", SIGNATURE, ".socket2.sock")
 CONFIG = os.environ.get("XDG_CONFIG_HOME", os.path.expanduser("~/.config"))
 STORE = os.path.join(CONFIG, "blomst-settings", "float-sizes.json")
 OPTIONS = os.path.join(CONFIG, "blomst-settings", "float-options.json")
-RULES = os.path.join(CONFIG, "hypr", "user", "float-sizes.conf")
+RULES = os.path.join(CONFIG, "hypr", "user", "float-sizes.lua")
 KITTY = os.path.join(CONFIG, "kitty", "float-size.conf")
 LOG = os.path.join(os.path.dirname(STORE), "float-sizes.log")
 
@@ -158,6 +158,11 @@ def escape(text):
     return re.sub(r"([.^$*+?()\[\]{}|\\])", r"\\\1", text)
 
 
+def lua_string(text):
+    """A Lua string literal. JSON's escapes for quotes and backslashes are the same in Lua."""
+    return json.dumps(text, ensure_ascii=False)
+
+
 def write_if_changed(path, text):
     target = os.path.realpath(path)
     try:
@@ -174,17 +179,15 @@ def write_if_changed(path, text):
 
 def write_rules(saved, options):
     """Turn the remembered sizes into Hyprland window rules. Hyprland reloads them by itself."""
-    lines = ["# Written by ~/scripts/float_sizes.py. Sizes you gave floating windows.", ""]
+    lines = ["-- Written by ~/scripts/float_sizes.py. Sizes you gave floating windows.", ""]
     if options["size"]:
         for key in sorted(saved):
             cls, _, title = key.partition("|")
-            if "," in key:                 # a comma would break the rule syntax; the fallback covers these
-                continue
-            match = "match:class ^(%s)$" % escape(cls)
+            match = "class = %s" % lua_string("^(%s)$" % escape(cls))
             if title:
-                match += ", match:initial_title ^(%s)$" % escape(title)
+                match += ", initial_title = %s" % lua_string("^(%s)$" % escape(title))
             size = saved[key]["size"]
-            lines.append("windowrule = %s, size %d %d" % (match, size[0], size[1]))
+            lines.append("hl.window_rule({ match = { %s }, size = { %d, %d } })" % (match, size[0], size[1]))
     try:
         if write_if_changed(RULES, "\n".join(lines) + "\n"):
             log("wrote %d size rules" % (len(lines) - 2))
@@ -212,20 +215,19 @@ def write_kitty(saved, options):
 
 def set_animation(address, on):
     """Turn the move/resize animation off for one window while we put it in place, so it
-    jumps there instead of gliding. Two spellings, for older and newer Hyprland."""
-    for prop in ("no_anim", "noanim"):
-        try:
-            reply = ask("/dispatch setprop address:%s %s %d" % (address, prop, 0 if on else 1)).strip()
-        except OSError as err:
-            reply = "failed: %s" % err
-        if reply == "ok":
-            return
-    log("could not switch animation for %s: %s" % (address, reply))
+    jumps there instead of gliding."""
+    try:
+        reply = ask('/dispatch hl.dsp.window.set_prop({ window = "address:%s", prop = "no_anim", value = "%d" })'
+                    % (address, 0 if on else 1)).strip()
+    except OSError as err:
+        reply = "failed: %s" % err
+    if reply != "ok":
+        log("could not switch animation for %s: %s" % (address, reply))
 
 
 def resize(address, size):
     try:
-        reply = ask("/dispatch resizewindowpixel exact %d %d,address:%s" % (size[0], size[1], address))
+        reply = ask('/dispatch hl.dsp.window.resize({ window = "address:%s", x = %d, y = %d })' % (address, size[0], size[1]))
     except OSError as err:
         reply = "failed: %s" % err
     log("resize %s to %dx%d -> %s" % (address, size[0], size[1], reply.strip()))
@@ -235,7 +237,7 @@ def move(address, current, target):
     """Move by the difference, which means the same thing on every monitor layout."""
     dx, dy = target[0] - current[0], target[1] - current[1]
     try:
-        reply = ask("/dispatch movewindowpixel %d %d,address:%s" % (dx, dy, address))
+        reply = ask('/dispatch hl.dsp.window.move({ window = "address:%s", x = %d, y = %d, relative = true })' % (address, dx, dy))
     except OSError as err:
         reply = "failed: %s" % err
     log("move %s to %d,%d -> %s" % (address, target[0], target[1], reply.strip()))

@@ -11,8 +11,8 @@ import subprocess
 HOME = os.path.expanduser("~")
 CONFIG = os.environ.get("XDG_CONFIG_HOME", os.path.join(HOME, ".config"))
 
-APPEARANCE = os.path.join(CONFIG, "hypr/core/appearence.conf")
-ANIMATIONS = os.path.join(CONFIG, "hypr/core/animations.conf")
+APPEARANCE = os.path.join(CONFIG, "hypr/core/appearence.lua")
+ANIMATIONS = os.path.join(CONFIG, "hypr/core/animations.lua")
 KITTY = os.path.join(CONFIG, "kitty/kitty.conf")
 COLORS = os.path.join(CONFIG, "eww/colors.scss")
 HYPRPAPER = os.path.join(CONFIG, "hypr/service/hyprpaper.conf")
@@ -20,16 +20,15 @@ WALLPAPER_SCRIPT = os.path.join(CONFIG, "eww/scripts/change-wallpaper.sh")
 WALLPAPERS = os.path.join(HOME, "wallpapers")
 PRESETS = os.path.join(CONFIG, "blomst-settings/presets.json")
 HYPRIDLE = os.path.join(CONFIG, "hypr/hypridle.conf")
-HYPRLAND = os.path.join(CONFIG, "hypr/hyprland.conf")
 EWW_SETTINGS = os.path.join(CONFIG, "eww/settings.yuck")
-APP_RULES_CONF = os.path.join(CONFIG, "hypr/user/app-rules.conf")
+APP_RULES_LUA = os.path.join(CONFIG, "hypr/user/app-rules.lua")
 APP_RULES_JSON = os.path.join(CONFIG, "blomst-settings/app-rules.json")
-APPS_CONF = os.path.join(CONFIG, "hypr/user/apps.conf")
-INPUTS = os.path.join(CONFIG, "hypr/user/inputs.conf")
-MONITORS = os.path.join(CONFIG, "hypr/user/monitors.conf")
-KEYBINDS = os.path.join(CONFIG, "hypr/core/keybinds.conf")
-CORE_EXECS = os.path.join(CONFIG, "hypr/core/execs.conf")
-USER_EXECS = os.path.join(CONFIG, "hypr/user/execs.conf")
+APPS_LUA = os.path.join(CONFIG, "hypr/user/apps.lua")
+INPUTS = os.path.join(CONFIG, "hypr/user/inputs.lua")
+MONITORS = os.path.join(CONFIG, "hypr/user/monitors.lua")
+KEYBINDS = os.path.join(CONFIG, "hypr/core/keybinds.lua")
+CORE_EXECS = os.path.join(CONFIG, "hypr/core/execs.lua")
+USER_EXECS = os.path.join(CONFIG, "hypr/user/execs.lua")
 NIGHT_LIGHT = os.path.join(CONFIG, "blomst-settings/night-light.json")       # read by ~/scripts/night_light.sh
 NIGHT_LIGHT_SCRIPT = os.path.join(HOME, "scripts/night_light.sh")
 IDLE_TOGGLE = os.path.join(CONFIG, "eww/scripts/toggle-idle.sh")
@@ -51,13 +50,13 @@ BROWSERS = [("firefox", "Firefox"), ("zen-browser", "Zen"), ("librewolf", "Libre
             ("vivaldi-stable", "Vivaldi"), ("qutebrowser", "qutebrowser")]
 TERMINALS = [("kitty", "kitty"), ("alacritty", "Alacritty"), ("foot", "foot"), ("wezterm", "WezTerm"),
              ("ghostty", "Ghostty"), ("konsole", "Konsole"), ("gnome-terminal", "GNOME Terminal")]
-APP_VARS = {"browser": "$browser", "terminal": "$terminal"}       # key -> variable in apps.conf
+APP_VARS = {"browser": "browser", "terminal": "terminal"}       # key -> field in apps.lua
 LAYOUT_SWITCHES = {"none": "", "alt_shift": "grp:alt_shift_toggle", "caps": "grp:caps_toggle",
                    "ctrl_space": "grp:ctrl_space_toggle"}
 SECOND_SCREEN_OFFSET = 5      # second monitor owns workspaces 6-10 (see ~/scripts/workspace.sh)
 
-BORDER_SPIN_ON = "animation = borderangle, 1, 60, linear, loop"
-BORDER_SPIN_OFF = "animation = borderangle, 0"
+BORDER_SPIN_ON = 'hl.animation({ leaf = "borderangle", enabled = true, speed = 60, bezier = "linear", style = "loop" })'
+BORDER_SPIN_OFF = 'hl.animation({ leaf = "borderangle", enabled = false })'
 
 # key -> (file, block path, option name, type)
 HYPR_KEYS = {
@@ -119,8 +118,22 @@ DEFAULTS = {
     "show_visualizer": True, "show_headset": True,
 }
 
-_BLOCK_OPEN = re.compile(r"^\s*([\w.:-]+)\s*\{\s*(#.*)?$")
-_BLOCK_CLOSE = re.compile(r"^\s*\}\s*(#.*)?$")
+# The Hyprland config is Lua: options are `name = value,` lines inside `name = {` tables.
+_BLOCK_OPEN = re.compile(r"^\s*(\w+)\s*=\s*\{\s*(--.*)?$")
+_BLOCK_CLOSE = re.compile(r"^\s*\}\s*\)?\s*,?\s*(--.*)?$")
+_LUA_STRING = r'"(?:[^"\\\n]|\\.)*"'
+
+
+def lua_string(text):
+    """A Lua string literal. JSON's escapes for quotes and backslashes are the same in Lua."""
+    return json.dumps(str(text), ensure_ascii=False)
+
+
+def _unquote(raw):
+    try:
+        return json.loads(raw) if raw.startswith('"') else raw
+    except ValueError:
+        return raw
 
 
 def _read(path):
@@ -157,7 +170,8 @@ def hypr_get(text, block, option):
     i = _find_option(lines, block, option)
     if i < 0:
         return None
-    return lines[i].split("=", 1)[1].split("#", 1)[0].strip()
+    value = lines[i].split("=", 1)[1].split("--", 1)[0].strip()
+    return _unquote(value[:-1].rstrip() if value.endswith(",") else value)
 
 
 def _find_block_end(lines, block):
@@ -184,13 +198,13 @@ def hypr_set(text, block, option, value):
         if end < 0:
             return text
         indent = re.match(r"^\s*", lines[end]).group(0) + "    "
-        lines.insert(end, indent + option + " = " + value)
+        lines.insert(end, indent + option + " = " + value + ",")
         return "\n".join(lines)
     head, rest = lines[i].split("=", 1)
     comment = ""
-    if "#" in rest:
-        comment = " #" + rest.split("#", 1)[1]
-    lines[i] = head.rstrip() + " = " + value + comment
+    if "--" in rest:
+        comment = " --" + rest.split("--", 1)[1]
+    lines[i] = head.rstrip() + " = " + value + "," + comment
     return "\n".join(lines)
 
 
@@ -202,6 +216,10 @@ def _format(value, kind):
     if kind is int:
         return str(int(round(float(value))))
     return ("%.2f" % float(value)).rstrip("0").rstrip(".")
+
+
+def _lua(value, kind):
+    return lua_string(str(value).strip()) if kind is str else _format(value, kind)
 
 
 def _parse(raw, kind, fallback):
@@ -219,6 +237,19 @@ def _parse(raw, kind, fallback):
         return fallback
 
 
+def _anim_speed(leaf):
+    """Matches an hl.animation line up to its speed; the speed is group 2."""
+    return r'^(\s*hl\.animation\(\{\s*leaf\s*=\s*"%s"\s*,\s*enabled\s*=\s*\w+\s*,\s*speed\s*=\s*)(\d+)' % leaf
+
+
+_WS_STYLE = r'^(\s*hl\.animation\(\{\s*leaf\s*=\s*"workspaces"[^\n]*\bstyle\s*=\s*")'
+
+
+def read_apps():
+    """The `name = "command",` fields of apps.lua."""
+    return {k: json.loads(v) for k, v in re.findall(r"^\s*(\w+)\s*=\s*(" + _LUA_STRING + r")", _read(APPS_LUA), re.M)}
+
+
 def read_settings():
     out = {}
     cache = {}
@@ -226,34 +257,33 @@ def read_settings():
         text = cache.setdefault(path, _read(path))
         out[key] = _parse(hypr_get(text, block, option), kind, DEFAULTS[key])
 
-    spin = re.search(r"^\s*animation\s*=\s*borderangle\s*,\s*(\d)", cache.get(ANIMATIONS, ""), re.M)
-    out["border_spin"] = bool(spin and spin.group(1) == "1")
+    spin = re.search(r'^\s*hl\.animation\(\{\s*leaf\s*=\s*"borderangle"\s*,\s*enabled\s*=\s*(\w+)', cache.get(ANIMATIONS, ""), re.M)
+    out["border_spin"] = bool(spin and spin.group(1) == "true")
 
     m = re.search(r"^\s*background_opacity\s+([\d.]+)", _read(KITTY), re.M)
     out["terminal_opacity"] = float(m.group(1)) if m else DEFAULTS["terminal_opacity"]
 
     anim = cache.get(ANIMATIONS, "")
     out["anim_speed"] = DEFAULTS["anim_speed"]
-    m = re.search(r"^\s*animation\s*=\s*windowsIn\s*,\s*\d\s*,\s*(\d+)", anim, re.M)
+    m = re.search(_anim_speed("windowsIn"), anim, re.M)
     if m:
         for name, factor in ANIM_SPEEDS.items():
-            if _scaled("windowsIn", factor) == int(m.group(1)):
+            if _scaled("windowsIn", factor) == int(m.group(2)):
                 out["anim_speed"] = name
     out["ws_anim"] = DEFAULTS["ws_anim"]
-    m = re.search(r"^\s*animation\s*=\s*workspaces\s*,[^,\n]*,[^,\n]*,[^,\n]*,\s*(\w+)", anim, re.M)
+    m = re.search(_WS_STYLE + r"(\w+)", anim, re.M)
     if m:
         out["ws_anim"] = {"slidefadevert": "vertical", "slidevert": "vertical", "slidefade": "horizontal",
-                          "slide": "horizontal", "fade": "fade"}.get(m.group(1), "vertical")
+                          "slide": "horizontal", "fade": "fade"}.get(m.group(2), "vertical")
 
     idle = _read(HYPRIDLE)
     for key, needle in IDLE_KEYS.items():
         seconds = idle_get(idle, needle)
         out[key] = max(1, round(seconds / 60)) if seconds else DEFAULTS[key]
 
-    apps = _read(APPS_CONF)
+    apps = read_apps()
     for key, var in APP_VARS.items():
-        m = re.search(r"^\s*" + re.escape(var) + r"\s*=\s*(.+?)\s*$", apps, re.M)
-        out[key] = m.group(1) if m else DEFAULTS[key]
+        out[key] = apps.get(var, DEFAULTS[key])
 
     options = hypr_get(cache.get(INPUTS, ""), ["input"], "kb_options") or ""
     found = re.search(r"grp:\w+", options)
@@ -385,11 +415,11 @@ def write_setting(key, value):
         if key == "kb_layout" and not valid_kb_layout(value):
             return False
         old = _read(path)
-        new = hypr_set(old, block, option, _format(value, kind))
+        new = hypr_set(old, block, option, _lua(value, kind))
     elif key == "border_spin":
         path, old = ANIMATIONS, _read(ANIMATIONS)
         line = BORDER_SPIN_ON if value else BORDER_SPIN_OFF
-        new = re.sub(r"^(\s*)animation\s*=\s*borderangle\s*,.*$", lambda m: m.group(1) + line, old, flags=re.M)
+        new = re.sub(r'^(\s*)hl\.animation\(\{\s*leaf\s*=\s*"borderangle".*$', lambda m: m.group(1) + line, old, flags=re.M)
     elif key == "terminal_opacity":
         path, old = KITTY, _read(KITTY)
         new = re.sub(r"^(\s*)background_opacity\s+[\d.]+", lambda m: m.group(1) + "background_opacity " + _format(value, float), old, flags=re.M)
@@ -399,14 +429,12 @@ def write_setting(key, value):
         path, old = ANIMATIONS, _read(ANIMATIONS)
         new = old
         for name in ANIM_BASE:
-            new = re.sub(r"^(\s*animation\s*=\s*%s\s*,\s*\d\s*,\s*)\d+" % name,
-                         lambda m, n=name: m.group(1) + str(_scaled(n, ANIM_SPEEDS[value])), new, flags=re.M)
+            new = re.sub(_anim_speed(name), lambda m, n=name: m.group(1) + str(_scaled(n, ANIM_SPEEDS[value])), new, flags=re.M)
     elif key == "ws_anim":
         if value not in WS_STYLES:
             return False
         path, old = ANIMATIONS, _read(ANIMATIONS)
-        new = re.sub(r"^(\s*animation\s*=\s*workspaces\s*,[^,\n]*,[^,\n]*,[^,\n]*,\s*)[^\n#]*",
-                     lambda m: m.group(1) + WS_STYLES[value], old, flags=re.M)
+        new = re.sub(_WS_STYLE + r'[^"\n]*', lambda m: m.group(1) + WS_STYLES[value], old, flags=re.M)
     elif key in IDLE_KEYS:
         path, old = HYPRIDLE, _read(HYPRIDLE)
         new = idle_set(old, IDLE_KEYS[key], int(round(float(value))) * 60)
@@ -432,12 +460,12 @@ def write_setting(key, value):
         if not value or "\n" in value:
             return False
         var = APP_VARS[key]
-        path, old = APPS_CONF, _read(APPS_CONF)
-        line = var + " = " + value
+        path, old = APPS_LUA, _read(APPS_LUA)
+        line = "    " + var + " = " + lua_string(value) + ","
         if re.search(r"^\s*" + re.escape(var) + r"\s*=", old, re.M):
             new = re.sub(r"^\s*" + re.escape(var) + r"\s*=.*$", lambda m: line, old, flags=re.M)
         else:
-            new = old.rstrip("\n") + "\n" + line + "\n"
+            new = re.sub(r"^\}", lambda m: line + "\n}", old, count=1, flags=re.M)
     elif key == "layout_switch":
         if value not in LAYOUT_SWITCHES:
             return False
@@ -446,7 +474,7 @@ def write_setting(key, value):
         parts = [o for o in current.split(",") if o.strip() and not o.strip().startswith("grp:")]
         if LAYOUT_SWITCHES[value]:
             parts.append(LAYOUT_SWITCHES[value])
-        new = hypr_set(old, ["input"], "kb_options", ",".join(p.strip() for p in parts))
+        new = hypr_set(old, ["input"], "kb_options", lua_string(",".join(p.strip() for p in parts)))
     elif key == "idle_enabled":
         if bool(value) == _running("hypridle"):
             return False
@@ -625,10 +653,13 @@ def apply_night_light():
 
 def ensure_night_light_autostart():
     """Hyprland should restore the night light at login."""
-    line = "exec-once = ~/scripts/night_light.sh"
     text = _read(CORE_EXECS)
     if text and "night_light.sh" not in text:
-        _write(CORE_EXECS, text.rstrip("\n") + "\n\n# Night light (Blomst Settings)\n" + line + "\n")
+        # The `once` list ends at the first line that is just "}" after it starts
+        new = re.sub(r"(^local once = \{\n.*?)^\}", lambda m: m.group(1) + '\n    -- Night light (Blomst Settings)\n    "~/scripts/night_light.sh",\n}',
+                     text, count=1, flags=re.M | re.S)
+        if new != text:
+            _write(CORE_EXECS, new)
 
 
 # ---------- displays ----------
@@ -689,13 +720,14 @@ def _closest_mode(mon, mode):
 
 
 def monitor_lines(mons):
-    """`monitor = ...` lines for these monitors, laid out left to right in their current order."""
+    """`hl.monitor(...)` lines for these monitors, laid out left to right in their current order."""
     lines, x = {}, 0
     for m in sorted(mons, key=lambda m: m["x"]):
         res = m["mode"].partition("@")[0]
         w, h = (int(v) for v in res.split("x"))
         scale = m["scale"]
-        lines[m["name"]] = "%s, %s, %dx%d, %s" % (m["name"], m["mode"], x, m["y"], ("%.6f" % scale).rstrip("0").rstrip("."))
+        lines[m["name"]] = "hl.monitor({ output = %s, mode = %s, position = \"%dx%d\", scale = %s })" % (
+            lua_string(m["name"]), lua_string(m["mode"]), x, m["y"], ("%.6f" % scale).rstrip("0").rstrip("."))
         x += round(w / scale)
     return lines
 
@@ -704,7 +736,7 @@ def apply_monitor_lines(lines):
     ok = True
     for line in lines.values():
         try:
-            r = subprocess.run(["hyprctl", "keyword", "monitor", line], capture_output=True, text=True, timeout=3)
+            r = subprocess.run(["hyprctl", "eval", line], capture_output=True, text=True, timeout=3)
             ok = ok and r.returncode == 0 and "error" not in r.stdout.lower()
         except (OSError, subprocess.SubprocessError):
             ok = False
@@ -714,11 +746,11 @@ def apply_monitor_lines(lines):
 def write_monitor_lines(lines):
     text = _read(MONITORS)
     for name, line in lines.items():
-        pattern = r"^\s*monitor\s*=\s*" + re.escape(name) + r"\s*,.*$"
+        pattern = r"^\s*hl\.monitor\(\{\s*output\s*=\s*" + re.escape(lua_string(name)) + r"\s*,.*$"
         if re.search(pattern, text, re.M):
-            text = re.sub(pattern, lambda m: "monitor = " + line, text, flags=re.M)
+            text = re.sub(pattern, lambda m: line, text, flags=re.M)
         else:
-            text = "monitor = " + line + "\n" + text
+            text = line + "\n" + text
     _write(MONITORS, text)
 
 
@@ -730,65 +762,54 @@ KEY_NAMES = {"RETURN": "Enter", "SPACE": "Space", "PRINT": "Print", "Escape": "E
              "XF86AudioRaiseVolume": "Volume up", "XF86AudioLowerVolume": "Volume down",
              "XF86AudioMute": "Mute", "XF86AudioMicMute": "Mute microphone",
              "XF86MonBrightnessUp": "Brightness up", "XF86MonBrightnessDown": "Brightness down"}
-DIRECTIONS = {"l": "left", "r": "right", "u": "up", "d": "down"}
-
-
-def _describe(dispatcher, arg, apps):
-    arg = arg.strip()
-    if dispatcher == "exec":
-        floating = arg.startswith("[float")
-        command = re.sub(r"^\[[^\]]*\]\s*", "", arg)
-        for var, val in apps.items():
-            command = command.replace(var, val)
-        return command + (" (floating)" if floating else "")
-    if dispatcher in ("workspace", "movetoworkspace"):
-        return ("Go to workspace " if dispatcher == "workspace" else "Send window to workspace ") + arg.replace("e+1", "next").replace("e-1", "previous")
-    if dispatcher in ("movefocus", "movewindow"):
-        return ("Focus " if dispatcher == "movefocus" else "Move window ") + DIRECTIONS.get(arg, arg)
-    if dispatcher in ("resizeactive", "moveactive"):
-        return ("Resize window " if dispatcher == "resizeactive" else "Move floating window ") + arg
-    if dispatcher == "layoutmsg" and arg == "togglesplit":
-        return "Switch split direction"
-    return {"killactive": "Close window", "togglefloating": "Float or tile window", "fullscreen": "Fullscreen",
-            "movewindow": "Drag to move window", "resizewindow": "Drag to resize window"}.get(dispatcher, (dispatcher + " " + arg).strip())
 
 
 def read_keybinds():
-    """Binds from keybinds.conf grouped under the comment above them."""
+    """Binds from keybinds.lua grouped under the comment above them, described by their desc."""
     text = _read(KEYBINDS)
-    variables = dict(re.findall(r"^\s*(\$\w+)\s*=\s*(\w+)", text, re.M))
-    apps = dict(re.findall(r"^\s*(\$\w+)\s*=\s*(.+?)\s*$", _read(APPS_CONF), re.M))
+    variables = dict(re.findall(r'^\s*local\s+(\w+)\s*=\s*"(\w+)"', text, re.M))
+    apps = read_apps()
     groups, title = [], "Other"
     for line in text.split("\n"):
         stripped = line.strip()
-        if stripped.startswith("#"):
-            heading = stripped.lstrip("#").strip()
-            if heading and not heading.lower().startswith(("1-5", "keybinds")):
+        if stripped.startswith("--"):
+            heading = stripped.lstrip("-").strip()
+            if heading and not heading.lower().startswith(("1-5", "keybinds", "blomst settings")):
                 title = heading
             continue
-        m = re.match(r"^bind\w*\s*=\s*([^,]*),\s*([^,]+),\s*([^,]+)(?:,\s*(.*))?$", stripped)
+        m = re.match(r"^hl\.bind\((.+?),\s*(?:hl\.dsp\.|function)", stripped)
         if not m:
             continue
-        mods, key, dispatcher, arg = m.group(1), m.group(2).strip(), m.group(3).strip(), (m.group(4) or "").split("#")[0]
+        combo = m.group(1)
         for var, val in variables.items():
-            mods = mods.replace(var, val)
-        names = [MOD_NAMES.get(w.upper(), w.title()) for w in mods.split()]
+            combo = re.sub(r"\b%s\b" % var, '"%s"' % val, combo)
+        words = [w.strip() for w in "".join(re.findall(_LUA_STRING, combo)).replace('"', "").split("+") if w.strip()]
+        if not words:
+            continue
+        *mods, key = words
+        names = [MOD_NAMES.get(w.upper(), w.title()) for w in mods]
         keys = " + ".join(names + [KEY_NAMES.get(key, key.upper() if len(key) == 1 else key)])
+        d = re.search(r"\bdesc\s*=\s*(" + _LUA_STRING + r"|apps\.\w+(?:\s*\.\.\s*" + _LUA_STRING + r")?)", stripped)
+        action = ""
+        if d:
+            parts = re.findall(r"apps\.(\w+)|(" + _LUA_STRING + r")", d.group(1))
+            action = "".join(apps.get(a, a) if a else json.loads(q) for a, q in parts)
         if not groups or groups[-1]["title"] != title:
             groups.append({"title": title, "binds": []})
-        groups[-1]["binds"].append({"keys": keys, "action": _describe(dispatcher, arg, apps)})
+        groups[-1]["binds"].append({"keys": keys, "action": action})
     return groups
 
 
 # ---------- startup apps ----------
 
 def read_autostart():
-    return [m.strip() for m in re.findall(r"^\s*exec-once\s*=\s*(.+)$", _read(USER_EXECS), re.M)]
+    return [json.loads(m) for m in re.findall(r"^\s*(" + _LUA_STRING + r")\s*,", _read(USER_EXECS), re.M)]
 
 
 def write_autostart(commands):
-    lines = ["# Auto Start Apps. Written by Blomst Settings (the Startup page)."]
-    lines += ["exec-once = " + c for c in commands]
+    lines = ["-- Auto Start Apps. Written by Blomst Settings (the Startup page).", "return {"]
+    lines += ["    " + lua_string(c) + "," for c in commands]
+    lines += ["}"]
     _write(USER_EXECS, "\n".join(lines) + "\n")
 
 
@@ -990,15 +1011,16 @@ def read_app_rules():
 
 
 def render_app_rules(rules):
-    lines = ["# Written by Blomst Settings. Edit there, not here.",
-             "# Where apps open (screen and workspace) and whether they open floating."]
+    lines = ["-- Written by Blomst Settings. Edit there, not here.",
+             "-- Where apps open (screen and workspace) and whether they open floating."]
     for r in rules:
-        match = "windowrule = match:class ^(%s)$, " % re.escape(r["class"])
+        effects = []
         if r.get("floating"):
-            lines.append(match + "float on")
+            effects.append("float = true")
         if r["screen"] != "any":
             number = r["workspace"] + (SECOND_SCREEN_OFFSET if r["screen"] == "second" else 0)
-            lines.append(match + "workspace %d" % number)
+            effects.append('workspace = "%d"' % number)
+        lines.append("hl.window_rule({ match = { class = %s }, %s })" % (lua_string("^(%s)$" % re.escape(r["class"])), ", ".join(effects)))
     return "\n".join(lines) + "\n"
 
 
@@ -1008,14 +1030,10 @@ def write_app_rules(rules):
     with open(tmp, "w", encoding="utf-8") as f:
         json.dump(rules, f, indent=2)
     os.replace(tmp, APP_RULES_JSON)
-    # The rules file must exist before hyprland.conf mentions it, or Hyprland shows an error.
-    target = os.path.realpath(APP_RULES_CONF)
+    target = os.path.realpath(APP_RULES_LUA)
     os.makedirs(os.path.dirname(target), exist_ok=True)
     with open(target, "w", encoding="utf-8") as f:
         f.write(render_app_rules(rules))
-    main = _read(HYPRLAND)
-    if main and "user/app-rules.conf" not in main:
-        _write(HYPRLAND, main.rstrip("\n") + "\nsource = $hyprDirectory/user/app-rules.conf\n")
 
 
 def add_app_rule(cls, screen, workspace, floating=False):

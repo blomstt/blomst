@@ -1,0 +1,53 @@
+local colors = require("user.colors")
+
+hl.config({
+    general = {
+        gaps_in = 5,
+        gaps_out = 8,
+
+        border_size = 2,
+
+        col = {
+            active_border = { colors = { colors.border_active_1, colors.border_active_2 }, angle = 45 },
+            inactive_border = colors.border_inactive,
+        },
+
+        resize_on_border = false,
+
+        allow_tearing = false,
+
+        layout = "dwindle",
+    },
+
+    decoration = {
+        rounding = 14,
+
+        active_opacity = 1.0,
+        inactive_opacity = 0.9,
+
+        blur = {
+            enabled = true,
+            size = 12,
+            passes = 3,
+            noise = 0.02,
+            contrast = 0.9,
+            brightness = 0.9,
+            vibrancy = 0.2,
+            popups = true,
+            ignore_opacity = false,
+        },
+
+        shadow = {
+            enabled = true,
+            range = 24,
+            render_power = 3,
+            offset = { 0, 4 },
+            color = "rgba(000000aa)",
+            color_inactive = "rgba(00000066)",
+        },
+    },
+
+    cursor = {
+        no_hardware_cursors = true,
+    },
+})
